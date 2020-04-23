@@ -1,2 +1,2 @@
-# skylark-widgets-listgroup
-The skylark listgroup widget library for list, accordion,menu, etc.
+# skylark-domx-lists
+The skylark list  library for dom api extension.
