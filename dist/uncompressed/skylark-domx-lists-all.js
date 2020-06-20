@@ -269,7 +269,6 @@ define('skylark-langx-types/types',[
         }
     }
 
-
     function isNull(obj) {
         return obj === null;
     }
@@ -351,7 +350,12 @@ define('skylark-langx-types/types',[
 
         isHtmlNode: isHtmlNode,
 
+        isNaN : function (obj) {
+            return isNaN(obj);
+        },
+
         isNull: isNull,
+
 
         isNumber: isNumber,
 
@@ -686,7 +690,7 @@ define('skylark-langx-objects/objects',[
         return keys;
     }
 
-    function each(obj, callback) {
+    function each(obj, callback,isForEach) {
         var length, key, i, undef, value;
 
         if (obj) {
@@ -697,7 +701,7 @@ define('skylark-langx-objects/objects',[
                 for (key in obj) {
                     if (obj.hasOwnProperty(key)) {
                         value = obj[key];
-                        if (callback.call(value, key, value) === false) {
+                        if ((isForEach ? callback.call(value, value, key) : callback.call(value, key, value) ) === false) {
                             break;
                         }
                     }
@@ -706,7 +710,7 @@ define('skylark-langx-objects/objects',[
                 // Loop array items
                 for (i = 0; i < length; i++) {
                     value = obj[i];
-                    if (callback.call(value, i, value) === false) {
+                    if ((isForEach ? callback.call(value, value, i) : callback.call(value, i, value) )=== false) {
                         break;
                     }
                 }
@@ -825,13 +829,15 @@ define('skylark-langx-objects/objects',[
             if (safe && target[key] !== undefined) {
                 continue;
             }
-            if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
-                if (isPlainObject(source[key]) && !isPlainObject(target[key])) {
+            // if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
+            //    if (isPlainObject(source[key]) && !isPlainObject(target[key])) {
+            if (deep && isPlainObject(source[key])) {
+                if (!isPlainObject(target[key])) {
                     target[key] = {};
                 }
-                if (isArray(source[key]) && !isArray(target[key])) {
-                    target[key] = [];
-                }
+                //if (isArray(source[key]) && !isArray(target[key])) {
+                //    target[key] = [];
+                //}
                 _mixin(target[key], source[key], deep, safe);
             } else if (source[key] !== undefined) {
                 target[key] = source[key]
@@ -2671,327 +2677,10 @@ define('skylark-langx/Deferred',[
 ],function(Deferred){
     return Deferred;
 });
-define('skylark-langx-emitter/Emitter',[
-  "skylark-langx-ns/ns",
-  "skylark-langx-types",
-  "skylark-langx-objects",
-  "skylark-langx-arrays",
-  "skylark-langx-klass"
-],function(skylark,types,objects,arrays,klass){
-    var slice = Array.prototype.slice,
-        compact = arrays.compact,
-        isDefined = types.isDefined,
-        isPlainObject = types.isPlainObject,
-        isFunction = types.isFunction,
-        isString = types.isString,
-        isEmptyObject = types.isEmptyObject,
-        mixin = objects.mixin,
-        safeMixin = objects.safeMixin;
-
-    function parse(event) {
-        var segs = ("" + event).split(".");
-        return {
-            name: segs[0],
-            ns: segs.slice(1).join(" ")
-        };
-    }
-
-    var Emitter = klass({
-        on: function(events, selector, data, callback, ctx, /*used internally*/ one) {
-            var self = this,
-                _hub = this._hub || (this._hub = {});
-
-            if (isPlainObject(events)) {
-                ctx = callback;
-                each(events, function(type, fn) {
-                    self.on(type, selector, data, fn, ctx, one);
-                });
-                return this;
-            }
-
-            if (!isString(selector) && !isFunction(callback)) {
-                ctx = callback;
-                callback = data;
-                data = selector;
-                selector = undefined;
-            }
-
-            if (isFunction(data)) {
-                ctx = callback;
-                callback = data;
-                data = null;
-            }
-
-            if (isString(events)) {
-                events = events.split(/\s/)
-            }
-
-            events.forEach(function(event) {
-                var parsed = parse(event),
-                    name = parsed.name,
-                    ns = parsed.ns;
-
-                (_hub[name] || (_hub[name] = [])).push({
-                    fn: callback,
-                    selector: selector,
-                    data: data,
-                    ctx: ctx,
-                    ns : ns,
-                    one: one
-                });
-            });
-
-            return this;
-        },
-
-        one: function(events, selector, data, callback, ctx) {
-            return this.on(events, selector, data, callback, ctx, 1);
-        },
-
-        emit: function(e /*,argument list*/ ) {
-            if (!this._hub) {
-                return this;
-            }
-
-            var self = this;
-
-            if (isString(e)) {
-                e = new CustomEvent(e);
-            }
-
-            Object.defineProperty(e,"target",{
-                value : this
-            });
-
-            var args = slice.call(arguments, 1);
-            if (isDefined(args)) {
-                args = [e].concat(args);
-            } else {
-                args = [e];
-            }
-            [e.type || e.name, "all"].forEach(function(eventName) {
-                var parsed = parse(eventName),
-                    name = parsed.name,
-                    ns = parsed.ns;
-
-                var listeners = self._hub[name];
-                if (!listeners) {
-                    return;
-                }
-
-                var len = listeners.length,
-                    reCompact = false;
-
-                for (var i = 0; i < len; i++) {
-                    var listener = listeners[i];
-                    if (ns && (!listener.ns ||  !listener.ns.startsWith(ns))) {
-                        continue;
-                    }
-                    if (e.data) {
-                        if (listener.data) {
-                            e.data = mixin({}, listener.data, e.data);
-                        }
-                    } else {
-                        e.data = listener.data || null;
-                    }
-                    listener.fn.apply(listener.ctx, args);
-                    if (listener.one) {
-                        listeners[i] = null;
-                        reCompact = true;
-                    }
-                }
-
-                if (reCompact) {
-                    self._hub[eventName] = compact(listeners);
-                }
-
-            });
-            return this;
-        },
-
-        listened: function(event) {
-            var evtArr = ((this._hub || (this._events = {}))[event] || []);
-            return evtArr.length > 0;
-        },
-
-        listenTo: function(obj, event, callback, /*used internally*/ one) {
-            if (!obj) {
-                return this;
-            }
-
-            // Bind callbacks on obj,
-            if (isString(callback)) {
-                callback = this[callback];
-            }
-
-            if (one) {
-                obj.one(event, callback, this);
-            } else {
-                obj.on(event, callback, this);
-            }
-
-            //keep track of them on listening.
-            var listeningTo = this._listeningTo || (this._listeningTo = []),
-                listening;
-
-            for (var i = 0; i < listeningTo.length; i++) {
-                if (listeningTo[i].obj == obj) {
-                    listening = listeningTo[i];
-                    break;
-                }
-            }
-            if (!listening) {
-                listeningTo.push(
-                    listening = {
-                        obj: obj,
-                        events: {}
-                    }
-                );
-            }
-            var listeningEvents = listening.events,
-                listeningEvent = listeningEvents[event] = listeningEvents[event] || [];
-            if (listeningEvent.indexOf(callback) == -1) {
-                listeningEvent.push(callback);
-            }
-
-            return this;
-        },
-
-        listenToOnce: function(obj, event, callback) {
-            return this.listenTo(obj, event, callback, 1);
-        },
-
-        off: function(events, callback) {
-            var _hub = this._hub || (this._hub = {});
-            if (isString(events)) {
-                events = events.split(/\s/)
-            }
-
-            events.forEach(function(event) {
-                var parsed = parse(event),
-                    name = parsed.name,
-                    ns = parsed.ns;
-
-                var evts = _hub[name];
-
-                if (evts) {
-                    var liveEvents = [];
-
-                    if (callback || ns) {
-                        for (var i = 0, len = evts.length; i < len; i++) {
-                            
-                            if (callback && evts[i].fn !== callback && evts[i].fn._ !== callback) {
-                                liveEvents.push(evts[i]);
-                                continue;
-                            } 
-
-                            if (ns && (!evts[i].ns || evts[i].ns.indexOf(ns)!=0)) {
-                                liveEvents.push(evts[i]);
-                                continue;
-                            }
-                        }
-                    }
-
-                    if (liveEvents.length) {
-                        _hub[name] = liveEvents;
-                    } else {
-                        delete _hub[name];
-                    }
-
-                }
-            });
-
-            return this;
-        },
-        unlistenTo: function(obj, event, callback) {
-            var listeningTo = this._listeningTo;
-            if (!listeningTo) {
-                return this;
-            }
-            for (var i = 0; i < listeningTo.length; i++) {
-                var listening = listeningTo[i];
-
-                if (obj && obj != listening.obj) {
-                    continue;
-                }
-
-                var listeningEvents = listening.events;
-                for (var eventName in listeningEvents) {
-                    if (event && event != eventName) {
-                        continue;
-                    }
-
-                    var listeningEvent = listeningEvents[eventName];
-
-                    for (var j = 0; j < listeningEvent.length; j++) {
-                        if (!callback || callback == listeningEvent[i]) {
-                            listening.obj.off(eventName, listeningEvent[i], this);
-                            listeningEvent[i] = null;
-                        }
-                    }
-
-                    listeningEvent = listeningEvents[eventName] = compact(listeningEvent);
-
-                    if (isEmptyObject(listeningEvent)) {
-                        listeningEvents[eventName] = null;
-                    }
-
-                }
-
-                if (isEmptyObject(listeningEvents)) {
-                    listeningTo[i] = null;
-                }
-            }
-
-            listeningTo = this._listeningTo = compact(listeningTo);
-            if (isEmptyObject(listeningTo)) {
-                this._listeningTo = null;
-            }
-
-            return this;
-        },
-
-        trigger  : function() {
-            return this.emit.apply(this,arguments);
-        }
-    });
-
-    Emitter.createEvent = function (type,props) {
-        var e = new CustomEvent(type,props);
-        return safeMixin(e, props);
-    };
-
-    return skylark.attach("langx.Emitter",Emitter);
-
-});
-define('skylark-langx-emitter/Evented',[
-  "skylark-langx-ns/ns",
-	"./Emitter"
-],function(skylark,Emitter){
-	return skylark.attach("langx.Evented",Emitter);
-});
-define('skylark-langx-emitter/main',[
-	"./Emitter",
-	"./Evented"
-],function(Emitter){
-	return Emitter;
-});
-define('skylark-langx-emitter', ['skylark-langx-emitter/main'], function (main) { return main; });
-
-define('skylark-langx/Emitter',[
-    "skylark-langx-emitter"
-],function(Evented){
-    return Evented;
-});
-define('skylark-langx/Evented',[
-    "skylark-langx-emitter"
-],function(Evented){
-    return Evented;
-});
-define('skylark-langx/funcs',[
-    "skylark-langx-funcs"
-],function(funcs){
-    return funcs;
+define('skylark-langx-events/events',[
+	"skylark-langx-ns"
+],function(skylark){
+	return skylark.attach("langx.events",{});
 });
 define('skylark-langx-hoster/hoster',[
     "skylark-langx-ns"
@@ -3029,6 +2718,21 @@ define('skylark-langx-hoster/hoster',[
 
 	var _document = null;
 
+	Object.defineProperty(hoster,"document",function(){
+		if (!_document) {
+			var w = typeof window === 'undefined' ? require('html-element') : window;
+			_document = w.document;
+		}
+
+		return _document;
+	});
+
+	if (hoster.global.CustomEvent === undefined) {
+		hoster.global.CustomEvent = function(type,props) {
+			this.type = type;
+			this.props = props;
+		};
+	}
 	Object.defineProperty(hoster,"document",function(){
 		if (!_document) {
 			var w = typeof window === 'undefined' ? require('html-element') : window;
@@ -3081,10 +2785,661 @@ define('skylark-langx-hoster/main',[
 });
 define('skylark-langx-hoster', ['skylark-langx-hoster/main'], function (main) { return main; });
 
+define('skylark-langx-events/Event',[
+  "skylark-langx-objects",
+  "skylark-langx-funcs",
+  "skylark-langx-klass",
+  "skylark-langx-hoster"
+],function(objects,funcs,klass){
+    var eventMethods = {
+        preventDefault: "isDefaultPrevented",
+        stopImmediatePropagation: "isImmediatePropagationStopped",
+        stopPropagation: "isPropagationStopped"
+     };
+        
+
+    function compatible(event, source) {
+        if (source || !event.isDefaultPrevented) {
+            if (!source) {
+                source = event;
+            }
+
+            objects.each(eventMethods, function(name, predicate) {
+                var sourceMethod = source[name];
+                event[name] = function() {
+                    this[predicate] = funcs.returnTrue;
+                    return sourceMethod && sourceMethod.apply(source, arguments);
+                }
+                event[predicate] = funcs.returnFalse;
+            });
+        }
+        return event;
+    }
+
+
+    /*
+    var Event = klass({
+        _construct : function(type,props) {
+            CustomEvent.call(this,type.props);
+            objects.safeMixin(this, props);
+            compatible(this);
+        }
+    },CustomEvent);
+    */
+
+    class Event extends CustomEvent {
+        constructor(type,props) {
+            super(type,props);
+            objects.safeMixin(this, props);
+            compatible(this);
+        } 
+    }
+
+
+    Event.compatible = compatible;
+
+    return Event;
+    
+});
+define('skylark-langx-events/Listener',[
+  "skylark-langx-types",
+  "skylark-langx-objects",
+  "skylark-langx-arrays",
+  "skylark-langx-klass",
+  "./events",
+  "./Event"
+],function(types,objects,arrays,klass,events,Event){
+    var slice = Array.prototype.slice,
+        compact = arrays.compact,
+        isDefined = types.isDefined,
+        isPlainObject = types.isPlainObject,
+        isFunction = types.isFunction,
+        isBoolean = types.isBoolean,
+        isString = types.isString,
+        isEmptyObject = types.isEmptyObject,
+        mixin = objects.mixin,
+        safeMixin = objects.safeMixin;
+
+
+    var Listener = klass({
+
+        listenTo: function(obj, event, callback, /*used internally*/ one) {
+            if (!obj) {
+                return this;
+            }
+
+            if (isBoolean(callback)) {
+                one = callback;
+                callback = null;
+            }
+
+            if (types.isPlainObject(event)){
+                //listenTo(obj,callbacks,one)
+                var callbacks = event;
+                for (var name in callbacks) {
+                    this.listeningTo(obj,name,callbacks[name],one);
+                }
+                return this;
+            }
+
+            if (!callback) {
+                callback = "handleEvent";
+            }
+            
+            // Bind callbacks on obj,
+            if (isString(callback)) {
+                callback = this[callback];
+            }
+
+            if (one) {
+                obj.one(event, callback, this);
+            } else {
+                obj.on(event, callback, this);
+            }
+
+            //keep track of them on listening.
+            var listeningTo = this._listeningTo || (this._listeningTo = []),
+                listening;
+
+            for (var i = 0; i < listeningTo.length; i++) {
+                if (listeningTo[i].obj == obj) {
+                    listening = listeningTo[i];
+                    break;
+                }
+            }
+            if (!listening) {
+                listeningTo.push(
+                    listening = {
+                        obj: obj,
+                        events: {}
+                    }
+                );
+            }
+            var listeningEvents = listening.events,
+                listeningEvent = listeningEvents[event] = listeningEvents[event] || [];
+            if (listeningEvent.indexOf(callback) == -1) {
+                listeningEvent.push(callback);
+            }
+
+            return this;
+        },
+
+        listenToOnce: function(obj, event, callback) {
+            return this.listenTo(obj, event, callback, 1);
+        },
+
+        unlistenTo: function(obj, event, callback) {
+            var listeningTo = this._listeningTo;
+            if (!listeningTo) {
+                return this;
+            }
+
+            if (isString(callback)) {
+                callback = this[callback];
+            }
+
+            for (var i = 0; i < listeningTo.length; i++) {
+                var listening = listeningTo[i];
+
+                if (obj && obj != listening.obj) {
+                    continue;
+                }
+
+                var listeningEvents = listening.events;
+                for (var eventName in listeningEvents) {
+                    if (event && event != eventName) {
+                        continue;
+                    }
+
+                    var listeningEvent = listeningEvents[eventName];
+
+                    for (var j = 0; j < listeningEvent.length; j++) {
+                        if (!callback || callback == listeningEvent[i]) {
+                            listening.obj.off(eventName, listeningEvent[i], this);
+                            listeningEvent[i] = null;
+                        }
+                    }
+
+                    listeningEvent = listeningEvents[eventName] = compact(listeningEvent);
+
+                    if (isEmptyObject(listeningEvent)) {
+                        listeningEvents[eventName] = null;
+                    }
+
+                }
+
+                if (isEmptyObject(listeningEvents)) {
+                    listeningTo[i] = null;
+                }
+            }
+
+            listeningTo = this._listeningTo = compact(listeningTo);
+            if (isEmptyObject(listeningTo)) {
+                this._listeningTo = null;
+            }
+
+            return this;
+        }
+    });
+
+    return events.Listener = Listener;
+
+});
+define('skylark-langx-events/Emitter',[
+  "skylark-langx-types",
+  "skylark-langx-objects",
+  "skylark-langx-arrays",
+  "skylark-langx-klass",
+  "./events",
+  "./Event",
+  "./Listener"
+],function(types,objects,arrays,klass,events,Event,Listener){
+    var slice = Array.prototype.slice,
+        compact = arrays.compact,
+        isDefined = types.isDefined,
+        isPlainObject = types.isPlainObject,
+        isFunction = types.isFunction,
+        isString = types.isString,
+        isEmptyObject = types.isEmptyObject,
+        mixin = objects.mixin,
+        safeMixin = objects.safeMixin;
+
+    function parse(event) {
+        var segs = ("" + event).split(".");
+        return {
+            name: segs[0],
+            ns: segs.slice(1).join(" ")
+        };
+    }
+
+    var Emitter = Listener.inherit({
+        on: function(events, selector, data, callback, ctx, /*used internally*/ one) {
+            var self = this,
+                _hub = this._hub || (this._hub = {});
+
+            if (isPlainObject(events)) {
+                ctx = callback;
+                each(events, function(type, fn) {
+                    self.on(type, selector, data, fn, ctx, one);
+                });
+                return this;
+            }
+
+            if (!isString(selector) && !isFunction(callback)) {
+                ctx = callback;
+                callback = data;
+                data = selector;
+                selector = undefined;
+            }
+
+            if (isFunction(data)) {
+                ctx = callback;
+                callback = data;
+                data = null;
+            }
+
+            if (!callback ) {
+                throw new Error("No callback function");
+            } else if (!isFunction(callback)) {
+                throw new Error("The callback  is not afunction");
+            }
+
+            if (isString(events)) {
+                events = events.split(/\s/)
+            }
+
+            events.forEach(function(event) {
+                var parsed = parse(event),
+                    name = parsed.name,
+                    ns = parsed.ns;
+
+                (_hub[name] || (_hub[name] = [])).push({
+                    fn: callback,
+                    selector: selector,
+                    data: data,
+                    ctx: ctx,
+                    ns : ns,
+                    one: one
+                });
+            });
+
+            return this;
+        },
+
+        one: function(events, selector, data, callback, ctx) {
+            return this.on(events, selector, data, callback, ctx, 1);
+        },
+
+        emit: function(e /*,argument list*/ ) {
+            if (!this._hub) {
+                return this;
+            }
+
+            var self = this;
+
+            if (isString(e)) {
+                e = new Event(e); //new CustomEvent(e);
+            }
+
+            Object.defineProperty(e,"target",{
+                value : this
+            });
+
+            var args = slice.call(arguments, 1);
+            if (isDefined(args)) {
+                args = [e].concat(args);
+            } else {
+                args = [e];
+            }
+            [e.type || e.name, "all"].forEach(function(eventName) {
+                var parsed = parse(eventName),
+                    name = parsed.name,
+                    ns = parsed.ns;
+
+                var listeners = self._hub[name];
+                if (!listeners) {
+                    return;
+                }
+
+                var len = listeners.length,
+                    reCompact = false;
+
+                for (var i = 0; i < len; i++) {
+                    if (e.isImmediatePropagationStopped && e.isImmediatePropagationStopped()) {
+                        return this;
+                    }
+                    var listener = listeners[i];
+                    if (ns && (!listener.ns ||  !listener.ns.startsWith(ns))) {
+                        continue;
+                    }
+                    if (e.data) {
+                        if (listener.data) {
+                            e.data = mixin({}, listener.data, e.data);
+                        }
+                    } else {
+                        e.data = listener.data || null;
+                    }
+                    listener.fn.apply(listener.ctx, args);
+                    if (listener.one) {
+                        listeners[i] = null;
+                        reCompact = true;
+                    }
+                }
+
+                if (reCompact) {
+                    self._hub[eventName] = compact(listeners);
+                }
+
+            });
+            return this;
+        },
+
+        listened: function(event) {
+            var evtArr = ((this._hub || (this._events = {}))[event] || []);
+            return evtArr.length > 0;
+        },
+
+        off: function(events, callback) {
+            var _hub = this._hub || (this._hub = {});
+            if (isString(events)) {
+                events = events.split(/\s/)
+            }
+
+            events.forEach(function(event) {
+                var parsed = parse(event),
+                    name = parsed.name,
+                    ns = parsed.ns;
+
+                var evts = _hub[name];
+
+                if (evts) {
+                    var liveEvents = [];
+
+                    if (callback || ns) {
+                        for (var i = 0, len = evts.length; i < len; i++) {
+                            
+                            if (callback && evts[i].fn !== callback && evts[i].fn._ !== callback) {
+                                liveEvents.push(evts[i]);
+                                continue;
+                            } 
+
+                            if (ns && (!evts[i].ns || evts[i].ns.indexOf(ns)!=0)) {
+                                liveEvents.push(evts[i]);
+                                continue;
+                            }
+                        }
+                    }
+
+                    if (liveEvents.length) {
+                        _hub[name] = liveEvents;
+                    } else {
+                        delete _hub[name];
+                    }
+
+                }
+            });
+
+            return this;
+        },
+        trigger  : function() {
+            return this.emit.apply(this,arguments);
+        }
+    });
+
+
+    return events.Emitter = Emitter;
+
+});
+define('skylark-langx/Emitter',[
+    "skylark-langx-events/Emitter"
+],function(Emitter){
+    return Emitter;
+});
+define('skylark-langx/Evented',[
+    "./Emitter"
+],function(Emitter){
+    return Emitter;
+});
+define('skylark-langx-events/createEvent',[
+	"./events",
+	"./Event"
+],function(events,Event){
+    function createEvent(type,props) {
+        //var e = new CustomEvent(type,props);
+        //return safeMixin(e, props);
+        return new Event(type,props);
+    };
+
+    return events.createEvent = createEvent;	
+});
+define('skylark-langx-events/main',[
+	"./events",
+	"./Event",
+	"./Listener",
+	"./Emitter",
+	"./createEvent"
+],function(events){
+	return events;
+});
+define('skylark-langx-events', ['skylark-langx-events/main'], function (main) { return main; });
+
+define('skylark-langx/events',[
+	"skylark-langx-events"
+],function(events){
+	return events;
+});
+define('skylark-langx/funcs',[
+    "skylark-langx-funcs"
+],function(funcs){
+    return funcs;
+});
 define('skylark-langx/hoster',[
 	"skylark-langx-hoster"
 ],function(hoster){
 	return hoster;
+});
+define('skylark-langx-maths/maths',[
+    "skylark-langx-ns",
+    "skylark-langx-types"
+],function(skylark,types){
+
+
+	var _lut = [];
+
+	for ( var i = 0; i < 256; i ++ ) {
+
+		_lut[ i ] = ( i < 16 ? '0' : '' ) + ( i ).toString( 16 );
+
+	}
+
+	var maths = {
+
+		DEG2RAD: Math.PI / 180,
+		RAD2DEG: 180 / Math.PI,
+
+
+
+		clamp: function ( value, min, max ) {
+
+			return Math.max( min, Math.min( max, value ) );
+
+		},
+
+		// compute euclidian modulo of m % n
+		// https://en.wikipedia.org/wiki/Modulo_operation
+
+		euclideanModulo: function ( n, m ) {
+
+			return ( ( n % m ) + m ) % m;
+
+		},
+
+		// Linear mapping from range <a1, a2> to range <b1, b2>
+
+		mapLinear: function ( x, a1, a2, b1, b2 ) {
+
+			return b1 + ( x - a1 ) * ( b2 - b1 ) / ( a2 - a1 );
+
+		},
+
+		// https://en.wikipedia.org/wiki/Linear_interpolation
+
+		lerp: function ( x, y, t ) {
+
+			return ( 1 - t ) * x + t * y;
+
+		},
+
+		// http://en.wikipedia.org/wiki/Smoothstep
+
+		smoothstep: function ( x, min, max ) {
+
+			if ( x <= min ) return 0;
+			if ( x >= max ) return 1;
+
+			x = ( x - min ) / ( max - min );
+
+			return x * x * ( 3 - 2 * x );
+
+		},
+
+		smootherstep: function ( x, min, max ) {
+
+			if ( x <= min ) return 0;
+			if ( x >= max ) return 1;
+
+			x = ( x - min ) / ( max - min );
+
+			return x * x * x * ( x * ( x * 6 - 15 ) + 10 );
+
+		},
+
+		// Random integer from <low, high> interval
+
+		randInt: function ( low, high ) {
+
+			return low + Math.floor( Math.random() * ( high - low + 1 ) );
+
+		},
+
+		// Random float from <low, high> interval
+
+		randFloat: function ( low, high ) {
+
+			return low + Math.random() * ( high - low );
+
+		},
+
+		// Random float from <-range/2, range/2> interval
+
+		randFloatSpread: function ( range ) {
+
+			return range * ( 0.5 - Math.random() );
+
+		},
+
+		degToRad: function ( degrees ) {
+
+			return degrees * MathUtils.DEG2RAD;
+
+		},
+
+		radToDeg: function ( radians ) {
+
+			return radians * MathUtils.RAD2DEG;
+
+		},
+
+		isPowerOfTwo: function ( value ) {
+
+			return ( value & ( value - 1 ) ) === 0 && value !== 0;
+
+		},
+
+		ceilPowerOfTwo: function ( value ) {
+
+			return Math.pow( 2, Math.ceil( Math.log( value ) / Math.LN2 ) );
+
+		},
+
+		floorPowerOfTwo: function ( value ) {
+
+			return Math.pow( 2, Math.floor( Math.log( value ) / Math.LN2 ) );
+
+		},
+
+		setQuaternionFromProperEuler: function ( q, a, b, c, order ) {
+
+			// Intrinsic Proper Euler Angles - see https://en.wikipedia.org/wiki/Euler_angles
+
+			// rotations are applied to the axes in the order specified by 'order'
+			// rotation by angle 'a' is applied first, then by angle 'b', then by angle 'c'
+			// angles are in radians
+
+			var cos = Math.cos;
+			var sin = Math.sin;
+
+			var c2 = cos( b / 2 );
+			var s2 = sin( b / 2 );
+
+			var c13 = cos( ( a + c ) / 2 );
+			var s13 = sin( ( a + c ) / 2 );
+
+			var c1_3 = cos( ( a - c ) / 2 );
+			var s1_3 = sin( ( a - c ) / 2 );
+
+			var c3_1 = cos( ( c - a ) / 2 );
+			var s3_1 = sin( ( c - a ) / 2 );
+
+			if ( order === 'XYX' ) {
+
+				q.set( c2 * s13, s2 * c1_3, s2 * s1_3, c2 * c13 );
+
+			} else if ( order === 'YZY' ) {
+
+				q.set( s2 * s1_3, c2 * s13, s2 * c1_3, c2 * c13 );
+
+			} else if ( order === 'ZXZ' ) {
+
+				q.set( s2 * c1_3, s2 * s1_3, c2 * s13, c2 * c13 );
+
+			} else if ( order === 'XZX' ) {
+
+				q.set( c2 * s13, s2 * s3_1, s2 * c3_1, c2 * c13 );
+
+			} else if ( order === 'YXY' ) {
+
+				q.set( s2 * c3_1, c2 * s13, s2 * s3_1, c2 * c13 );
+
+			} else if ( order === 'ZYZ' ) {
+
+				q.set( s2 * s3_1, s2 * c3_1, c2 * s13, c2 * c13 );
+
+			} else {
+
+				console.warn( 'THREE.MathUtils: .setQuaternionFromProperEuler() encountered an unknown order.' );
+
+			}
+
+		}
+
+	};
+
+
+
+	return  skylark.attach("langx.maths",maths);
+});
+define('skylark-langx-maths/main',[
+	"./maths"
+],function(maths){
+	return maths;
+});
+define('skylark-langx-maths', ['skylark-langx-maths/main'], function (main) { return main; });
+
+define('skylark-langx/maths',[
+    "skylark-langx-maths"
+],function(maths){
+    return maths;
 });
 define('skylark-langx/numbers',[
 	"skylark-langx-numbers"
@@ -3290,8 +3645,13 @@ define('skylark-langx-strings/strings',[
         return document.getElementById(id).innerHTML;
     };
 
+
+    function ltrim(str) {
+        return str.replace(/^\s+/, '');
+    }
+    
     function rtrim(str) {
-        return str.replace(/\s+$/g, '');
+        return str.replace(/\s+$/, '');
     }
 
     // Slugify a string
@@ -3358,6 +3718,8 @@ define('skylark-langx-strings/strings',[
 
         generateUUID : generateUUID,
 
+        ltrim : ltrim,
+
         lowerFirst: function(str) {
             return str.charAt(0).toLowerCase() + str.slice(1);
         },
@@ -3385,8 +3747,159 @@ define('skylark-langx-strings/strings',[
 	}) ; 
 
 });
-define('skylark-langx-strings/main',[
+define('skylark-langx-strings/base64',[
 	"./strings"
+],function(strings) {
+
+	// private property
+	const _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+	// private method for UTF-8 encoding
+	function _utf8_encode(string) {
+		string = string.replace(/\r\n/g,"\n");
+		var utftext = "";
+
+		for (var n = 0; n < string.length; n++) {
+
+			var c = string.charCodeAt(n);
+
+			if (c < 128) {
+				utftext += String.fromCharCode(c);
+			}
+			else if((c > 127) && (c < 2048)) {
+				utftext += String.fromCharCode((c >> 6) | 192);
+				utftext += String.fromCharCode((c & 63) | 128);
+			}
+			else {
+				utftext += String.fromCharCode((c >> 12) | 224);
+				utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+				utftext += String.fromCharCode((c & 63) | 128);
+			}
+
+		}
+
+		return utftext;
+	}
+
+	// private method for UTF-8 decoding
+	function _utf8_decode(utftext) {
+		var string = "";
+		var i = 0;
+		var c = c1 = c2 = 0;
+
+		while ( i < utftext.length ) {
+
+			c = utftext.charCodeAt(i);
+
+			if (c < 128) {
+				string += String.fromCharCode(c);
+				i++;
+			}
+			else if((c > 191) && (c < 224)) {
+				c2 = utftext.charCodeAt(i+1);
+				string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+				i += 2;
+			}
+			else {
+				c2 = utftext.charCodeAt(i+1);
+				c3 = utftext.charCodeAt(i+2);
+				string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+				i += 3;
+			}
+
+		}
+
+		return string;
+	}
+
+	// public method for encoding
+	function encode(input, binary) {
+		binary = (binary != null) ? binary : false;
+		var output = "";
+		var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+		var i = 0;
+
+		if (!binary)
+		{
+			input = _utf8_encode(input);
+		}
+
+		while (i < input.length) {
+
+			chr1 = input.charCodeAt(i++);
+			chr2 = input.charCodeAt(i++);
+			chr3 = input.charCodeAt(i++);
+
+			enc1 = chr1 >> 2;
+			enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+			enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+			enc4 = chr3 & 63;
+
+			if (isNaN(chr2)) {
+				enc3 = enc4 = 64;
+			} else if (isNaN(chr3)) {
+				enc4 = 64;
+			}
+
+			output = output +
+			this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
+			this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
+
+		}
+
+		return output;
+	}
+
+	// public method for decoding
+	function decode(input, binary) {
+		binary = (binary != null) ? binary : false;
+		var output = "";
+		var chr1, chr2, chr3;
+		var enc1, enc2, enc3, enc4;
+		var i = 0;
+
+		input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+		while (i < input.length) {
+
+			enc1 = this._keyStr.indexOf(input.charAt(i++));
+			enc2 = this._keyStr.indexOf(input.charAt(i++));
+			enc3 = this._keyStr.indexOf(input.charAt(i++));
+			enc4 = this._keyStr.indexOf(input.charAt(i++));
+
+			chr1 = (enc1 << 2) | (enc2 >> 4);
+			chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+			chr3 = ((enc3 & 3) << 6) | enc4;
+
+			output = output + String.fromCharCode(chr1);
+
+			if (enc3 != 64) {
+				output = output + String.fromCharCode(chr2);
+			}
+			if (enc4 != 64) {
+				output = output + String.fromCharCode(chr3);
+			}
+
+		}
+
+		if (!binary) {
+			output = _utf8_decode(output);
+		}
+
+		return output;
+
+	}
+
+
+	return strings.base64 = {
+		decode,
+		encode
+	};
+	
+});
+define('skylark-langx-strings/main',[
+	"./strings",
+	"./base64"
 ],function(strings){
 	return strings;
 });
@@ -3609,6 +4122,16 @@ define('skylark-langx/Stateful',[
 
 	return Stateful;
 });
+define('skylark-langx-emitter/Emitter',[
+    "skylark-langx-events/Emitter"
+],function(Emitter){
+    return Emitter;
+});
+define('skylark-langx-emitter/Evented',[
+	"./Emitter"
+],function(Emitter){
+	return Emitter;
+});
 define('skylark-langx-topic/topic',[
 	"skylark-langx-ns",
 	"skylark-langx-emitter/Evented"
@@ -3667,16 +4190,39 @@ define('skylark-langx/langx',[
     "./Deferred",
     "./Emitter",
     "./Evented",
+    "./events",
     "./funcs",
     "./hoster",
     "./klass",
+    "./maths",
     "./numbers",
     "./objects",
     "./Stateful",
     "./strings",
     "./topic",
     "./types"
-], function(skylark,arrays,ArrayStore,aspect,async,datetimes,Deferred,Emitter,Evented,funcs,hoster,klass,numbers,objects,Stateful,strings,topic,types) {
+], function(
+    skylark,
+    arrays,
+    ArrayStore,
+    aspect,
+    async,
+    datetimes,
+    Deferred,
+    Emitter,
+    Evented,
+    events,
+    funcs,
+    hoster,
+    klass,
+    maths,
+    numbers,
+    objects,
+    Stateful,
+    strings,
+    topic,
+    types
+) {
     "use strict";
     var toString = {}.toString,
         concat = Array.prototype.concat,
@@ -4309,6 +4855,9 @@ function removeSelfClosingTags(xml) {
         return new RegExp("^(" + (blockNodes.join('|')) + ")$").test(node.nodeName.toLowerCase());
     }
 
+    function isActive (elem) {
+            return elem === document.activeElement && (elem.type || elem.href);
+    }
 
     /*   
      * Get the owner document object for the specified element.
@@ -4432,6 +4981,18 @@ function removeSelfClosingTags(xml) {
     }
 
 
+    function selectable(elem, selectable) {
+        if (elem === undefined || elem.style === undefined)
+            return;
+        elem.onselectstart = selectable ? function () {
+            return false;
+        } : function () {
+        };
+        elem.style.MozUserSelect = selectable ? 'auto' : 'none';
+        elem.style.KhtmlUserSelect = selectable ? 'auto' : 'none';
+        elem.unselectable = selectable ? 'on' : 'off';
+    }
+
     /*   
      * traverse the specified node and its descendants, perform the callback function on each
      * @param {Node} node
@@ -4505,6 +5066,12 @@ function removeSelfClosingTags(xml) {
     langx.mixin(noder, {
         active  : activeElement,
 
+        after: after,
+
+        append: append,
+
+        before: before,
+
         blur : function(el) {
             el.blur();
         },
@@ -4514,14 +5081,16 @@ function removeSelfClosingTags(xml) {
         },
 
         clone: clone,
+
+        contains: contains,
+
         contents: contents,
 
         createElement: createElement,
 
         createFragment: createFragment,
 
-        contains: contains,
-
+     
         createTextNode: createTextNode,
 
         doc: doc,
@@ -4533,6 +5102,8 @@ function removeSelfClosingTags(xml) {
         focusable: focusable,
 
         html: html,
+
+        isActive,
 
         isChildOf: isChildOf,
 
@@ -4550,13 +5121,7 @@ function removeSelfClosingTags(xml) {
 
         ownerWindow: ownerWindow,
 
-        after: after,
-
-        before: before,
-
         prepend: prepend,
-
-        append: append,
 
         reflow: reflow,
 
@@ -4565,6 +5130,8 @@ function removeSelfClosingTags(xml) {
         removeChild : removeChild,
 
         replace: replace,
+
+        selectable,
 
         traverse: traverse,
 
@@ -8254,12 +8821,12 @@ define('skylark-domx-styler/styler',[
         var self = this;
         name.split(/\s+/g).forEach(function(klass) {
             if (when === undefined) {
-                when = !self.hasClass(elm, klass);
+                when = !hasClass(elm, klass);
             }
             if (when) {
-                self.addClass(elm, klass);
+                addClass(elm, klass);
             } else {
-                self.removeClass(elm, klass)
+                removeClass(elm, klass)
             }
         });
 
@@ -8559,6 +9126,27 @@ define('skylark-domx-geom/geom',[
             width: cs.width - pex.left - pex.right,
             height: cs.height - pex.top - pex.bottom
         };
+    }
+
+
+    function fullCover(elem, hor, vert) {
+        let vertical = vert;
+        let horizontal = hor;
+        if (langx.isUndefined(horizontal)) {
+            horizontal = true;
+        }
+        if (langx.isUndefined(vertical)) {
+            vertical = true;
+        }
+        elem.style.position = 'absolute';
+        if (horizontal) {
+            elem.style.left = 0;
+            elem.style.right = 0;
+        }
+        if (vertical) {
+            elem.style.top = 0;
+            elem.style.bottom = 0;
+        }
     }
 
     /*
@@ -8942,6 +9530,8 @@ define('skylark-domx-geom/geom',[
         clientWidth: clientWidth,
 
         contentRect: contentRect,
+
+        fullCover,
 
         getDocumentSize: getDocumentSize,
 
@@ -10221,8 +10811,11 @@ define('skylark-domx-fx/main',[
 define('skylark-domx-fx', ['skylark-domx-fx/main'], function (main) { return main; });
 
 define('skylark-domx-plugins/plugins',[
-    "skylark-langx/skylark",
-    "skylark-langx/langx",
+    "skylark-langx-ns",
+    "skylark-langx-types",
+    "skylark-langx-objects",
+    "skylark-langx-funcs",
+    "skylark-langx-events/Emitter",
     "skylark-domx-noder",
     "skylark-domx-data",
     "skylark-domx-eventer",
@@ -10232,7 +10825,22 @@ define('skylark-domx-plugins/plugins',[
     "skylark-domx-fx",
     "skylark-domx-query",
     "skylark-domx-velm"
-], function(skylark, langx, noder, datax, eventer, finder, geom, styler, fx, $, elmx) {
+], function(
+    skylark,
+    types,
+    objects,
+    funcs,
+    Emitter, 
+    noder, 
+    datax, 
+    eventer, 
+    finder, 
+    geom, 
+    styler, 
+    fx, 
+    $, 
+    elmx
+) {
     "use strict";
 
     var slice = Array.prototype.slice,
@@ -10311,10 +10919,12 @@ define('skylark-domx-plugins/plugins',[
                                 "attempted to call method '" + methodName + "'" );
                         }
 
-                        if ( !langx.isFunction( plugin[ methodName ] ) || methodName.charAt( 0 ) === "_" ) {
+                        if ( !types.isFunction( plugin[ methodName ] ) || methodName.charAt( 0 ) === "_" ) {
                             throw new Error( "no such method '" + methodName + "' for " + pluginName +
                                 " plugin instance" );
                         }
+
+                        args = slice.call(args,1); //remove method name
 
                         var ret = plugin[methodName].apply(plugin,args);
                         if (ret == plugin) {
@@ -10339,7 +10949,7 @@ define('skylark-domx-plugins/plugins',[
         pluginKlasses[pluginName] = pluginKlass;
 
         if (shortcutName) {
-            if (instanceDataName && langx.isFunction(instanceDataName)) {
+            if (instanceDataName && types.isFunction(instanceDataName)) {
                 extfn = instanceDataName;
                 instanceDataName = null;
             } 
@@ -10381,7 +10991,7 @@ define('skylark-domx-plugins/plugins',[
     }
 
  
-    var Plugin =   langx.Evented.inherit({
+    var Plugin =   Emitter.inherit({
         klassName: "Plugin",
 
         _construct : function(elm,options) {
@@ -10407,15 +11017,15 @@ define('skylark-domx-plugins/plugins',[
             for (var i=0;i<ctors.length;i++) {
               ctor = ctors[i];
               if (ctor.prototype.hasOwnProperty("options")) {
-                langx.mixin(defaults,ctor.prototype.options,true);
+                objects.mixin(defaults,ctor.prototype.options,true);
               }
               if (ctor.hasOwnProperty("options")) {
-                langx.mixin(defaults,ctor.options,true);
+                objects.mixin(defaults,ctor.options,true);
               }
             }
           }
           Object.defineProperty(this,"options",{
-            value :langx.mixin({},defaults,options,true)
+            value :objects.mixin({},defaults,options,true)
           });
 
           //return this.options = langx.mixin({},defaults,options);
@@ -10424,15 +11034,16 @@ define('skylark-domx-plugins/plugins',[
 
 
         destroy: function() {
-            var that = this;
 
             this._destroy();
-            // We can probably remove the unbind calls in 2.0
-            // all event bindings should go through this._on()
+
+            // remove all event lisener
+            this.unlistenTo();
+            // remove data 
             datax.removeData(this._elm,this.pluginName );
         },
 
-        _destroy: langx.noop,
+        _destroy: funcs.noop,
 
         _delay: function( handler, delay ) {
             function handlerProxy() {
@@ -10441,6 +11052,17 @@ define('skylark-domx-plugins/plugins',[
             }
             var instance = this;
             return setTimeout( handlerProxy, delay || 0 );
+        },
+
+        elmx : function(elm) {
+            elm = elm || this._elm;
+            return elmx(elm);
+
+        },
+
+        $ : function(elm) {
+            elm = elm || this._elm;
+            return $(elm);
         },
 
         option: function( key, value ) {
@@ -10452,7 +11074,7 @@ define('skylark-domx-plugins/plugins',[
             if ( arguments.length === 0 ) {
 
                 // Don't return a reference to the internal hash
-                return langx.mixin( {}, this.options );
+                return objects.mixin( {}, this.options );
             }
 
             if ( typeof key === "string" ) {
@@ -10462,7 +11084,7 @@ define('skylark-domx-plugins/plugins',[
                 parts = key.split( "." );
                 key = parts.shift();
                 if ( parts.length ) {
-                    curOption = options[ key ] = langx.mixin( {}, this.options[ key ] );
+                    curOption = options[ key ] = objects.mixin( {}, this.options[ key ] );
                     for ( i = 0; i < parts.length - 1; i++ ) {
                         curOption[ parts[ i ] ] = curOption[ parts[ i ] ] || {};
                         curOption = curOption[ parts[ i ] ];
@@ -10515,6 +11137,10 @@ define('skylark-domx-plugins/plugins',[
 
     });
 
+    Plugin.instantiate = function(elm,options) {
+        return instantiate(elm,this.prototype.pluginName,options);
+    };
+    
     $.fn.plugin = function(name,options) {
         var args = slice.call( arguments, 1 ),
             self = this,
@@ -10528,7 +11154,7 @@ define('skylark-domx-plugins/plugins',[
 
     elmx.partial("plugin",function(name,options) {
         var args = slice.call( arguments, 1 );
-        return instantiate.apply(this,[this.domNode,name].concat(args));
+        return instantiate.apply(this,[this._elm,name].concat(args));
     }); 
 
 
@@ -10536,7 +11162,7 @@ define('skylark-domx-plugins/plugins',[
         return plugins;
     }
      
-    langx.mixin(plugins, {
+    objects.mixin(plugins, {
         instantiate,
         Plugin,
         register,

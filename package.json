@@ -22,8 +22,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "skylark-langx": "git+https://github.com/skylark-langx/skylark-langx.git#master",
-    "skylark-domx-plugins": "git+https://github.com/skylark-domx/skylark-domx-plugins.git#master"
+    "skylark-domx-plugins": "git+https://github.com/skylark-domx/skylark-domx-plugins.git#master",
+    "skylark-langx": "git+https://github.com/skylark-langx/skylark-langx.git#master"
   },
   "devDependencies": {
     "skylark-bootstrap3": "git+https://github.com/skylark-integration/skylark-bootstrap3.git#master"
