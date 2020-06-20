@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="../themes/twbs/css/bootstrap.css">
     <link rel="stylesheet" href="../themes/twbs/css/font-awesome.4.7.min.css">
     <link rel="stylesheet" href="../../skins/default/listing.css">
+    <link rel="stylesheet" href="../../skins/default/popover.css">
     <link rel="stylesheet" href="./app.css">
     <style>
         .hidden {
@@ -19,35 +20,29 @@
 <body>
     <div class="container">
         <section class="jumbotron text-center">
-            <h2 class="jumbotron-heading">Vertical Menu</h2>
-            <a class="btn btn-outline-info" href="assets/css/mm-vertical.css" target="_top">
-                <i class="fa fa-fw fa-css3"></i> Download CSS
-            </a>
-            <a class="btn btn-outline-warning" href="assets/js/mm-vertical.js" target="_top">
-                <i class="fa fa-fw fa-file-code-o"></i> Download JS
-            </a>
+            <h2 class="jumbotron-heading">Popover Menu</h2>
         </section>
         <div class="row">
             <aside class="col-md-3">
                 <nav class="sidebar-nav">
-                    <ul class="lark-listing accordion" id="menu1">
+                    <ul class="lark-listing popover" id="menu1">
                         <li>
                             <a class="has-arrow" href="#">
                                 <span class="fa fa-fw fa-github fa-lg"></span> metisMenu
                             </a>
                             <ul>
                                 <li>
-                                    <a href="https://github.com/onokumus/metisMenu">
+                                    <a href="https://github.com/skylark-domx/skylark-domx-lists">
                                         <span class="fa fa-fw fa-code-fork"></span> Fork
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="https://github.com/onokumus/metisMenu">
+                                    <a href="https://github.com/skylark-domx/skylark-domx-lists">
                                         <span class="fa fa-fw fa-star"></span> Star
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="https://github.com/onokumus/metisMenu/issues">
+                                    <a href="https://github.com/skylark-domx/skylark-domx-lists/issues">
                                         <span class="fa fa-fw fa-exclamation-triangle"></span> Issues
                                     </a>
                                 </li>
@@ -107,8 +102,11 @@
                         <pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
       $(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
 
-          $(<span class="hljs-string">'#menu1'</span>).metisMenu();
-
+            $('.lark-listing.popover').plugin("lark.listing",{
+              "multitier" : {
+                "mode" : "popover"
+              }                
+            });
       });
     </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
     </code></pre>
@@ -123,24 +121,24 @@
         <div class="row">
             <div class="col-md-3">
                 <nav class="sidebar-nav">
-                    <ul class="lark-listing accordion" id="menu2">
+                    <ul class="lark-listing popover" id="menu2">
                         <li>
                             <a class="has-arrow" href="#">
                                 <span class="fa fa-fw fa-github fa-lg"></span> metisMenu
                             </a>
                             <ul>
                                 <li>
-                                    <a href="https://github.com/onokumus/metisMenu">
+                                    <a href="https://github.com/skylark-domx/skylark-domx-lists">
                                         <span class="fa fa-fw fa-code-fork"></span> Fork
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="https://github.com/onokumus/metisMenu">
+                                    <a href="https://github.com/skylark-domx/skylark-domx-lists">
                                         <span class="fa fa-fw fa-star"></span> Star
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="https://github.com/onokumus/metisMenu/issues">
+                                    <a href="https://github.com/skylark-domx/skylark-domx-lists/issues">
                                         <span class="fa fa-fw fa-exclamation-triangle"></span> Issues
                                     </a>
                                 </li>
@@ -201,7 +199,11 @@
                         <pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">script</span>&gt;</span><span class="javascript">
   $(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
 
-      $(<span class="hljs-string">'#menu2'</span>).metisMenu({ <span class="hljs-attr">toggle</span>: <span class="hljs-literal">false</span> });
+            $('.lark-listing.popover').plugin("lark.listing",{
+              "multitier" : {
+                "mode" : "popover"
+              }                
+            });
 
   });
 </span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
@@ -236,24 +238,24 @@
 
             <div class="col-md-3">
                 <nav class="sidebar-nav">
-                    <ul class="lark-listing accordion" id="menu3">
+                    <ul class="lark-listing popover" id="menu3">
                         <li>
                             <a class="has-arrow" href="#">
                                 <span class="fa fa-fw fa-github fa-lg"></span> metisMenu
                             </a>
                             <ul>
                                 <li>
-                                    <a href="https://github.com/onokumus/metisMenu">
+                                    <a href="https://github.com/skylark-domx/skylark-domx-lists">
                                         <span class="fa fa-fw fa-code-fork"></span> Fork
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="https://github.com/onokumus/metisMenu">
+                                    <a href="https://github.com/skylark-domx/skylark-domx-lists">
                                         <span class="fa fa-fw fa-star"></span> Star
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="https://github.com/onokumus/metisMenu/issues">
+                                    <a href="https://github.com/skylark-domx/skylark-domx-lists/issues">
                                         <span class="fa fa-fw fa-exclamation-triangle"></span> Issues
                                     </a>
                                 </li>
@@ -313,9 +315,9 @@
     <script type="text/javascript" src="../require.js" data-main="../bootstrap.js"></script>
     <script>
         var initPage = function($) {
-            $('.lark-listing.accordion').plugin("lark.listing",{
-              "multiTier" : {
-                "mode" : "accordion"
+            $('.lark-listing.popover').plugin("lark.listing",{
+              "multitier" : {
+                "mode" : "popover"
               }                
             });
 
