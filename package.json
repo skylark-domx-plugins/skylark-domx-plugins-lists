@@ -22,6 +22,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "skylark-domx-panels": "git+https://github.com/skylark-domx/skylark-domx-panels.git#master",
     "skylark-domx-plugins": "git+https://github.com/skylark-domx/skylark-domx-plugins.git#master",
     "skylark-langx": "git+https://github.com/skylark-langx/skylark-langx.git#master"
   },

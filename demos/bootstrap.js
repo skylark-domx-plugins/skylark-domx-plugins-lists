@@ -29,6 +29,11 @@ requirejs.config({
             main: 'main'
          },
          {
+           name : "skylark-langx-events",
+           location : "../node_modules/skylark-langx-events/dist/uncompressed/skylark-langx-events",
+            main: 'main'
+         },
+         {
            name : "skylark-langx-funcs",
            location : "../node_modules/skylark-langx-funcs/dist/uncompressed/skylark-langx-funcs",
             main: 'main'
@@ -41,6 +46,11 @@ requirejs.config({
          {
            name : "skylark-langx-klass",
            location : "../node_modules/skylark-langx-klass/dist/uncompressed/skylark-langx-klass",
+            main: 'main'
+         },
+         {
+           name : "skylark-langx-maths",
+           location : "../node_modules/skylark-langx-maths/dist/uncompressed/skylark-langx-maths",
             main: 'main'
          },
          {
@@ -174,6 +184,21 @@ requirejs.config({
          {
            name : "skylark-domx-velm",
            location : "../node_modules/skylark-domx-velm/dist/uncompressed/skylark-domx-velm",
+            main: 'main'
+         },
+         {
+           name : "skylark-domx-spy",
+           location : "../node_modules/skylark-domx-spy/dist/uncompressed/skylark-domx-spy",
+            main: 'main'
+         },
+         {
+           name : "skylark-domx-panels",
+           location : "../node_modules/skylark-domx-panels/dist/uncompressed/skylark-domx-panels",
+            main: 'main'
+         },
+         {
+           name : "skylark-domx-popups",
+           location : "../node_modules/skylark-domx-popups/dist/uncompressed/skylark-domx-popups",
             main: 'main'
          },
          {

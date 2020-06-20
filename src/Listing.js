@@ -3,8 +3,9 @@
   "skylark-domx-query",
   "skylark-domx-velm",
   "skylark-domx-plugins",
+  "skylark-domx-panels/Collapse",
   "./lists"
-],function(langx,$,elmx,plugins,lists){
+],function(langx,$,elmx,plugins,Collapse,lists){
 
     var Listing = plugins.Plugin.inherit({
         klassName : "Listing",
@@ -23,6 +24,13 @@
               hasChildren : ":has(ul)",
               toggler : " > a"
             },
+            classes : {
+              collapsed : "",
+              expanded : ""
+            },
+
+            multiExpand : true,
+
             tree : {
               classes : {
                 expandIcon: 'glyphicon-plus',    // "glyphicon-chevron-down", 'glyphicon-folder-open'
@@ -105,7 +113,6 @@
             this.selected = this.options.selected;
 
             var $this = velm,
-                $toggle = this.options.toggle,
                 multitierMode = this.options.multitier.mode,
                 hasChildrenSelector = this.options.multitier.selectors.hasChildren,
                 childrenSelector = this.options.multitier.selectors.children,
@@ -169,16 +176,16 @@
                 });
               }
               */ 
-              var togglerSelector = self.options.multitier.selectors.toggler;
+              var multiExpand = self.options.multitier.multiExpand,
+                  togglerSelector = self.options.multitier.selectors.toggler;
 
               this._$items.has(childrenSelector).find(togglerSelector).on("click" + "." + this.pluginName, function(e) {
                   e.preventDefault();
 
-                  $(this).closest(itemSelector).toggleClass("active").children(childrenSelector).collapse("toggle");
-
-                  if ($toggle) {
-                      $(this).closest(itemSelector).siblings().removeClass("active").children(childrenSelector+".in").collapse("hide");
+                  if (multiExpand) {
+                      $(this).closest(itemSelector).siblings().removeClass("active").children(childrenSelector+".in").plugin("domx.collapse").hide();
                   }
+                  $(this).closest(itemSelector).toggleClass("active").children(childrenSelector).plugin("domx.collapse").toggle();
               });
 
              this._$items.filter(".active").has(childrenSelector).children(childrenSelector).addClass("collapse in");
