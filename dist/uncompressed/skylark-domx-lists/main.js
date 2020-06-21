@@ -1,6 +1,9 @@
 define([
     "./lists",
-    "./Listing"
+    "./Foldable",
+    "./Cascadable",
+    "./Group",
+    "./Toolbar"
 ], function(lists) {
     return lists;
 });

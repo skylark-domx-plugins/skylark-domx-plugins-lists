@@ -202,6 +202,11 @@ requirejs.config({
             main: 'main'
          },
          {
+           name : "skylark-domx-toggles",
+           location : "../node_modules/skylark-domx-toggles/dist/uncompressed/skylark-domx-toggles",
+            main: 'main'
+         },
+         {
             name: 'skylark-bootstrap3',
             location : "../node_modules/skylark-bootstrap3/dist/uncompressed/skylark-bootstrap3",
             main: 'main'
