@@ -5,5 +5,5 @@
  * @link https://github.com/skylark-domx/skylark-domx-lists/
  * @license MIT
  */
-define(["./lists","./Foldable","./Cascadable","./Group","./Toolbar"],function(a){return a});
+define(["./lists","./Foldable","./Cascadable","./Group","./Tree"],function(e){return e});
 //# sourceMappingURL=sourcemaps/main.js.map

@@ -3,7 +3,7 @@ define([
     "./Foldable",
     "./Cascadable",
     "./Group",
-    "./Toolbar"
+    "./Tree"
 ], function(lists) {
     return lists;
 });

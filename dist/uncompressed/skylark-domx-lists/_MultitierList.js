@@ -3,10 +3,10 @@
   "skylark-domx-query",
   "skylark-domx-velm",
   "skylark-domx-plugins",
-  "skylark-domx-panels/Panel",
+  "skylark-domx-toggles/Collapsable",
   "./lists",
   "./Group"
-],function(langx,$,elmx,plugins,Panel,lists,Group){
+],function(langx,$,elmx,plugins,Collapsable,lists,Group){
 
     var _MultitierList = Group.inherit({
         klassName : "_MultitierList",
@@ -50,9 +50,9 @@
                   e.preventDefault();
 
                   if (multiExpand) {
-                      $(this).closest(itemSelector).siblings().removeClass("active").children(childrenSelector+".in").plugin("domx.panels.panel").hide();
+                      langx.scall($(this).closest(itemSelector).siblings().removeClass("active").children(childrenSelector+".in").plugin("domx.toggles.collapsable"),"hide");
                   }
-                  $(this).closest(itemSelector).toggleClass("active").children(childrenSelector).plugin("domx.panels.panel").toggle();
+                  $(this).closest(itemSelector).toggleClass("active").children(childrenSelector).plugin("domx.toggles.collapsable").toggle();
               });
 
              this._$items.filter(".active").has(childrenSelector).children(childrenSelector).addClass("collapse in");
