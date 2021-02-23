@@ -197,18 +197,23 @@ requirejs.config({
             main: 'main'
          },
          {
-           name : "skylark-domx-panels",
-           location : "../node_modules/skylark-domx-panels/dist/uncompressed/skylark-domx-panels",
+           name : "skylark-domx",
+           location : "../node_modules/skylark-domx/dist/uncompressed/skylark-domx",
             main: 'main'
          },
          {
-           name : "skylark-domx-popups",
-           location : "../node_modules/skylark-domx-popups/dist/uncompressed/skylark-domx-popups",
+           name : "skylark-domx-plugins-panels",
+           location : "../node_modules/skylark-domx-plugins-panels/dist/uncompressed/skylark-domx-plugins-panels",
             main: 'main'
          },
          {
-           name : "skylark-domx-toggles",
-           location : "../node_modules/skylark-domx-toggles/dist/uncompressed/skylark-domx-toggles",
+           name : "skylark-domx-plugins-popups",
+           location : "../node_modules/skylark-domx-plugins-popups/dist/uncompressed/skylark-domx-plugins-popups",
+            main: 'main'
+         },
+         {
+           name : "skylark-domx-plugins-toggles",
+           location : "../node_modules/skylark-domx-plugins-toggles/dist/uncompressed/skylark-domx-plugins-toggles",
             main: 'main'
          },
          {
@@ -217,7 +222,7 @@ requirejs.config({
             main: 'main'
           },   
           {
-            name: 'skylark-domx-lists',
+            name: 'skylark-domx-plugins-lists',
             location : "../src",
             main: 'main'
           }      
@@ -226,11 +231,11 @@ requirejs.config({
 });
  
 // require(["module/name", ...], function(params){ ... });
-require(["skylark-domx-query","skylark-bootstrap3/loadedInit"], function ($,bsInit) {
+require(["skylark-langx/langx","skylark-domx","skylark-bootstrap3/loadedInit"], function (langx,domx,bsInit) {
     bsInit();
-    require(["skylark-domx-lists"], function (lists) {
+    require(["skylark-domx-plugins-lists"], function (lists) {
         if (window.initPage) {
-            window.initPage($,lists);
+            window.initPage(langx,domx,lists);
         }
     });
 });

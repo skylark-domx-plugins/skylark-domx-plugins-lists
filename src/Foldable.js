@@ -10,7 +10,7 @@
   var Foldable = _MultitierList.inherit({
     klassName : "Foldable",
 
-    pluginName : "domx.lists.foldable"
+    pluginName : "domx.plugins.lists.foldable"
 
   });
 

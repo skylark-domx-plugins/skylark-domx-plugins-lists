@@ -11,7 +11,7 @@
   var Cascade = _MultitierList.inherit({
     klassName : "Tree",
 
-    pluginName : "domx.lists.tree"
+    pluginName : "domx.plugins.lists.tree"
   });
 
 

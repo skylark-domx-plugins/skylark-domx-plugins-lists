@@ -9,7 +9,7 @@
     var Group = plugins.Plugin.inherit({
         klassName : "Group",
 
-        pluginName : "domx.lists.group",
+        pluginName : "domx.plugins.lists.group",
 
         options : {
         	multiSelect: false,

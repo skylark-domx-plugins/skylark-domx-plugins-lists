@@ -22,7 +22,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "skylark-domx-plugins": "git+https://github.com/skylark-domx/skylark-domx-plugins.git#master",
+    "skylark-domx": "git+https://github.com/skylark-domx/skylark-domx.git#master",
     "skylark-domx-plugins-panels": "git+https://github.com/skylark-domx-plugins/skylark-domx-plugins-panels.git#master",
     "skylark-domx-plugins-popups": "git+https://github.com/skylark-domx-plugins/skylark-domx-plugins-popups.git#master",
     "skylark-domx-plugins-toggles": "git+https://github.com/skylark-domx-plugins/skylark-domx-plugins-toggles.git#master",

@@ -11,7 +11,7 @@
   var Cascadable = _MultitierList.inherit({
     klassName : "Cascadable",
 
-    pluginName : "domx.lists.cascadable"
+    pluginName : "domx.plugins.lists.cascadable"
   });
 
 
