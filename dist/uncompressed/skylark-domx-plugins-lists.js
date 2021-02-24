@@ -319,10 +319,11 @@ define('skylark-domx-plugins-lists/lists',[
 define('skylark-domx-plugins-lists/Slidable',[
   'skylark-langx/langx',
   'skylark-domx-noder',
+  'skylark-domx-eventer',
   'skylark-domx-query',
   'skylark-domx-plugins',
   "./lists"
-], function (langx, noder, $,plugins,lists) {
+], function (langx, noder, eventer, $,plugins,lists) {
   'use strict'
   var Slidable = plugins.Plugin.inherit({
     klassName: "Slidable",
@@ -348,7 +349,7 @@ define('skylark-domx-plugins-lists/Slidable',[
       playingClass: 'lark-domx-slidable-playing',
 
 			// The class to add when the gallery controls are visible:
-		controlsClass: 'lark-domx-slidable-controls',
+		  controlsClass: 'lark-domx-slidable-controls',
 
       // The class for all slides:
       slideClass: 'slide',
@@ -450,10 +451,6 @@ define('skylark-domx-plugins-lists/Slidable',[
       thumbnailIndicators: true,
 
 
-
-      // The event object for which the default action will be canceled
-      // on Gallery initialization (e.g. the click event to open the Gallery):
-      event: undefined,
       // Callback function executed when the Gallery is initialized.
       // Is called with the gallery instance as "this" object:
       onopen: undefined,
@@ -495,12 +492,6 @@ define('skylark-domx-plugins-lists/Slidable',[
       startSlideshow: true
     },
     */
-
-    console: window.console && typeof window.console.log === 'function' ?
-      window.console : {
-        log: function () {}
-      },
-
     // Detect touch, transition, transform and background-size support:
     support: (function (element) {
       var support = {
@@ -594,7 +585,7 @@ define('skylark-domx-plugins-lists/Slidable',[
     _construct: function (gallery, options) {
       this.overrided(gallery, options);
       this._velm = this.elmx();
-      
+
       this.list = this.options.items;
       //this.options.container = this.elm();
       this.num = this.list.length;
@@ -813,11 +804,7 @@ define('skylark-domx-plugins-lists/Slidable',[
       // Cancel the slideshow:
       this.pause();
       this._velm.hide();
-      this._velm
-        .removeClass(options.displayClass)
-        .removeClass(options.singleClass)
-        .removeClass(options.leftEdgeClass)
-        .removeClass(options.rightEdgeClass)
+      this._velm.removeClass([options.displayClass,options.singleClass,options.leftEdgeClass,options.rightEdgeClass]);
       if (options.hidePageScrollbars) {
         document.body.style.overflow = this.bodyOverflowStyle
       }
@@ -833,8 +820,8 @@ define('skylark-domx-plugins-lists/Slidable',[
       var that = this
 
       function closeHandler(event) {
-        if (event.target === that.container[0]) {
-          that.container.off(that.support.transition.end, closeHandler)
+        if (event.target === that._elm) {
+          that._velm.off(that.support.transition.end, closeHandler)
           that.handleClose()
         }
       }
@@ -901,22 +888,6 @@ define('skylark-domx-plugins-lists/Slidable',[
       }, 4)
     },
 
-    preventDefault: function (event) {
-      if (event.preventDefault) {
-        event.preventDefault()
-      } else {
-        event.returnValue = false
-      }
-    },
-
-    stopPropagation: function (event) {
-      if (event.stopPropagation) {
-        event.stopPropagation()
-      } else {
-        event.cancelBubble = true
-      }
-    },
-
     onresize: function () {
       this.initSlides(true)
     },
@@ -970,7 +941,7 @@ define('skylark-domx-plugins-lists/Slidable',[
 
     ontouchstart: function (event) {
       if (this.options.stopTouchEventsPropagation) {
-        this.stopPropagation(event)
+        eventer.stop(event)
       }
       // jQuery doesn't copy touch event properties by default,
       // so we have to access the originalEvent object:
@@ -990,7 +961,7 @@ define('skylark-domx-plugins-lists/Slidable',[
 
     ontouchmove: function (event) {
       if (this.options.stopTouchEventsPropagation) {
-        this.stopPropagation(event)
+        eventer.stop(event)
       }
       // jQuery doesn't copy touch event properties by default,
       // so we have to access the originalEvent object:
@@ -1053,7 +1024,7 @@ define('skylark-domx-plugins-lists/Slidable',[
 
     ontouchend: function (event) {
       if (this.options.stopTouchEventsPropagation) {
-        this.stopPropagation(event)
+        eventer.stop(event)
       }
       var index = this.index
       var speed = this.options.transitionSpeed
@@ -1181,7 +1152,7 @@ define('skylark-domx-plugins-lists/Slidable',[
       switch (event.which || event.keyCode) {
         case 13: // Return
           if (this.options.toggleControlsOnReturn) {
-            this.preventDefault(event)
+            eventer.stop(event)
             this.toggleControls()
           }
           break
@@ -1194,19 +1165,19 @@ define('skylark-domx-plugins-lists/Slidable',[
           break
         case 32: // Space
           if (this.options.toggleSlideshowOnSpace) {
-            this.preventDefault(event)
+            eventer.stop(event)
             this.toggleSlideshow()
           }
           break
         case 37: // Left
           if (this.options.enableKeyboardNavigation) {
-            this.preventDefault(event)
+            eventer.stop(event)
             this.prev()
           }
           break
         case 39: // Right
           if (this.options.enableKeyboardNavigation) {
-            this.preventDefault(event)
+            eventer.stop(event)
             this.next()
           }
           break
@@ -1220,7 +1191,7 @@ define('skylark-domx-plugins-lists/Slidable',[
 
       if (parent === this.indicatorContainer[0]) {
         // Click on indicator element
-        this.preventDefault(event)
+        eventer.stop(event)
         this.slide(this.getNodeIndex(target));
         return;
       } else if (parent.parentNode === this.indicatorContainer[0]) {
@@ -1236,31 +1207,31 @@ define('skylark-domx-plugins-lists/Slidable',[
       }
       if (isTarget(options.toggleClass)) {
         // Click on "toggle" control
-        this.preventDefault(event)
+        eventer.stop(event)
         this.toggleControls()
       } else if (isTarget(options.prevClass)) {
         // Click on "prev" control
-        this.preventDefault(event)
+        eventer.stop(event)
         this.prev()
       } else if (isTarget(options.nextClass)) {
         // Click on "next" control
-        this.preventDefault(event)
+        eventer.stop(event)
         this.next()
       } else if (isTarget(options.closeClass)) {
         // Click on "close" control
-        this.preventDefault(event)
+        eventer.stop(event)
         this.close()
       } else if (isTarget(options.playPauseClass)) {
         // Click on "play-pause" control
-        this.preventDefault(event)
+        eventer.stop(event)
         this.toggleSlideshow()
       } else if (parent === this.slidesContainer[0]) {
         // Click on slide background
         if (options.closeOnSlideClick) {
-          this.preventDefault(event)
+          eventer.stop(event)
           this.close()
         } else if (options.toggleControlsOnSlideClick) {
-          this.preventDefault(event)
+          eventer.stop(event)
           this.toggleControls()
         }
       } else if (
@@ -1269,7 +1240,7 @@ define('skylark-domx-plugins-lists/Slidable',[
       ) {
         // Click on displayed element
         if (options.toggleControlsOnSlideClick) {
-          this.preventDefault(event)
+          eventer.stop(event)
           this.toggleControls()
         }
       }
@@ -1576,8 +1547,8 @@ define('skylark-domx-plugins-lists/Slidable',[
       var that = this
 
       function openHandler(event) {
-        if (event.target === that.container[0]) {
-          that.container.off(that.support.transition.end, openHandler)
+        if (event.target === that._elm) {
+          that._velm.off(that.support.transition.end, openHandler)
           that.handleOpen()
         }
       }
@@ -1593,10 +1564,7 @@ define('skylark-domx-plugins-lists/Slidable',[
         .query(this.options.slidesContainer)
         .first()
       if (!this.slidesContainer.length) {
-        this.console.log(
-          'blueimp Gallery: Slides container not found.',
-          this.options.slidesContainer
-        )
+
         return false
       }
       this.titleElement = this._velm.query(this.options.titleElement).first()
@@ -1633,9 +1601,7 @@ define('skylark-domx-plugins-lists/Slidable',[
       if (!this.support.transition) {
         this.options.emulateTouchEvents = false
       }
-      if (this.options.event) {
-        this.preventDefault(this.options.event)
-      }
+
     }
   });
 
