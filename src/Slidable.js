@@ -13,7 +13,7 @@ define([
 
     options: {
       // The Id, element or querySelector of the gallery view:
-      container: null,
+      ///container: null,
       // The tag name, Id, element or querySelector of the slides container:
       slidesContainer: 'div',
       // The tag name, Id, element or querySelector of the title element:
@@ -275,9 +275,10 @@ define([
 
     _construct: function (gallery, options) {
       this.overrided(gallery, options);
-
+      this._velm = this.elmx();
+      
       this.list = this.options.items;
-      this.options.container = this.elm();
+      //this.options.container = this.elm();
       this.num = this.list.length;
 
       this.initStartIndex()
@@ -435,7 +436,7 @@ define([
           this.interval
         )
       }
-      this.container.addClass(this.options.playingClass)
+      this._velm.addClass(this.options.playingClass)
     },
 
     pause: function () {
@@ -445,7 +446,7 @@ define([
         this.cancelAnimationFrame.call(window, this.animationFrameId)
         this.animationFrameId = null
       }
-      this.container.removeClass(this.options.playingClass)
+      this._velm.removeClass(this.options.playingClass)
     },
 
     add: function (list) {
@@ -462,9 +463,9 @@ define([
       this.num = this.list.length
       if (this.num > 2 && this.options.continuous === null) {
         this.options.continuous = true
-        this.container.removeClass(this.options.leftEdgeClass)
+        this._velm.removeClass(this.options.leftEdgeClass)
       }
-      this.container
+      this._velm
         .removeClass(this.options.rightEdgeClass)
         .removeClass(this.options.singleClass)
       for (i = this.num - list.length; i < this.num; i += 1) {
@@ -492,9 +493,9 @@ define([
       var options = this.options
       this.destroyEventListeners()
       // Cancel the slideshow:
-      this.pause()
-      this.container[0].style.display = 'none'
-      this.container
+      this.pause();
+      this._velm.hide();
+      this._velm
         .removeClass(options.displayClass)
         .removeClass(options.singleClass)
         .removeClass(options.leftEdgeClass)
@@ -523,8 +524,8 @@ define([
         this.options.onclose.call(this)
       }
       if (this.support.transition && this.options.displayTransition) {
-        this.container.on(this.support.transition.end, closeHandler)
-        this.container.removeClass(this.options.displayClass)
+        this._velm.on(this.support.transition.end, closeHandler)
+        this._velm.removeClass(this.options.displayClass)
       } else {
         this.handleClose()
       }
@@ -841,8 +842,8 @@ define([
         this.elements[index] = 2 // Done
       }
       // Fix for IE7's lack of support for percentage max-height:
-      if (target.clientHeight > this.container[0].clientHeight) {
-        target.style.maxHeight = this.container[0].clientHeight
+      if (target.clientHeight > this._velm.clientHeight()) {
+        target.style.maxHeight = this._velm.clientHeight()
       }
       if (this.interval && this.slides[this.index] === parent) {
         this.play()
@@ -970,14 +971,14 @@ define([
 
     updateEdgeClasses: function (index) {
       if (!index) {
-        this.container.addClass(this.options.leftEdgeClass)
+        this._velm.addClass(this.options.leftEdgeClass)
       } else {
-        this.container.removeClass(this.options.leftEdgeClass)
+        this._velm.removeClass(this.options.leftEdgeClass)
       }
       if (index === this.num - 1) {
-        this.container.addClass(this.options.rightEdgeClass)
+        this._velm.addClass(this.options.rightEdgeClass)
       } else {
-        this.container.removeClass(this.options.rightEdgeClass)
+        this._velm.removeClass(this.options.rightEdgeClass)
       }
     },
 
@@ -1104,7 +1105,7 @@ define([
 
     initSlides: function (reload) {
       if (!reload) {
-        this.indicatorContainer = this.container.find(
+        this.indicatorContainer = this._velm.query(
           this.options.indicatorContainer
         )
         if (this.indicatorContainer.length) {
@@ -1126,8 +1127,8 @@ define([
         clearSlides =
           this.options.clearSlides || this.slides.length !== this.num
       }
-      this.slideWidth = this.container[0].clientWidth
-      this.slideHeight = this.container[0].clientHeight
+      this.slideWidth = this._velm.clientWidth();
+      this.slideHeight = this._velm.clientHeight();
       this.slidesContainer[0].style.width = this.num * this.slideWidth + 'px'
       if (clearSlides) {
         this.resetSlides()
@@ -1168,10 +1169,10 @@ define([
     toggleControls: function () {
 
       var controlsClass = this.options.controlsClass
-      if (this.container.hasClass(controlsClass)) {
-        this.container.removeClass(controlsClass)
+      if (this._velm.hasClass(controlsClass)) {
+        this._velm.removeClass(controlsClass)
       } else {
-        this.container.addClass(controlsClass)
+        this._velm.addClass(controlsClass)
       }
     },
 
@@ -1207,7 +1208,7 @@ define([
       }
       $(window).on('resize', proxyListener)
       $(document.body).on('keydown', proxyListener)
-      this.container.on('click', proxyListener)
+      this._velm.on('click', proxyListener)
       if (this.support.touch) {
         slidesContainer.on(
           'touchstart touchmove touchend touchcancel',
@@ -1230,7 +1231,7 @@ define([
       var proxyListener = this.proxyListener
       $(window).off('resize', proxyListener)
       $(document.body).off('keydown', proxyListener)
-      this.container.off('click', proxyListener)
+      this._velm.off('click', proxyListener)
       if (this.support.touch) {
         slidesContainer.off(
           'touchstart touchmove touchend touchcancel',
@@ -1262,16 +1263,16 @@ define([
           that.handleOpen()
         }
       }
-      this.container = $(this.options.container)
-      if (!this.container.length) {
-        this.console.log(
-          'blueimp Gallery: Widget container not found.',
-          this.options.container
-        )
-        return false
-      }
-      this.slidesContainer = this.container
-        .find(this.options.slidesContainer)
+      //this.container = $(this.options.container)
+      //if (!this.container.length) {
+      //  this.console.log(
+      //    'blueimp Gallery: Widget container not found.',
+      //    this.options.container
+      //  )
+      //  return false
+     // }
+      this.slidesContainer = this._velm
+        .query(this.options.slidesContainer)
         .first()
       if (!this.slidesContainer.length) {
         this.console.log(
@@ -1280,15 +1281,15 @@ define([
         )
         return false
       }
-      this.titleElement = this.container.find(this.options.titleElement).first()
+      this.titleElement = this._velm.query(this.options.titleElement).first()
       if (this.num === 1) {
-        this.container.addClass(this.options.singleClass)
+        this._velm.addClass(this.options.singleClass)
       }
       if (this.options.onopen) {
         this.options.onopen.call(this)
       }
       if (this.support.transition && this.options.displayTransition) {
-        this.container.on(this.support.transition.end, openHandler)
+        this._velm.on(this.support.transition.end, openHandler)
       } else {
         this.handleOpen()
       }
@@ -1297,9 +1298,9 @@ define([
         this.bodyOverflowStyle = document.body.style.overflow
         document.body.style.overflow = 'hidden'
       }
-      this.container[0].style.display = 'block'
+      this._velm.show();
       this.initSlides()
-      this.container.addClass(this.options.displayClass)
+      this._velm.addClass(this.options.displayClass)
     },
 
     initOptions: function (options) {
