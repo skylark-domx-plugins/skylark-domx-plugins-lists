@@ -410,9 +410,14 @@ define([
 
     play: function (time) {
       var that = this
-      window.clearTimeout(this.timeout)
+      ///window.clearTimeout(this.timeout);
+      if (this.timeout) {
+        this.timeout.stop();
+        this.timeout = null;
+      }
       this.interval = time || this.options.slideshowInterval
       if (this.elements[this.index] > 1) {
+        /*
         this.timeout = this.setTimeout(
           (!this.requestAnimationFrame && this.slide) ||
           function (to, speed) {
@@ -425,18 +430,24 @@ define([
           },
           [this.index + 1, this.options.slideshowTransitionSpeed],
           this.interval
-        )
+        )*/
+
+        this.timeout = langx.debounce(this.slide.bind(this),this.interval,true)(this.index + 1, this.options.slideshowTransitionSpeed);
       }
       this._velm.addClass(this.options.playingClass)
     },
 
     pause: function () {
-      window.clearTimeout(this.timeout)
-      this.interval = null
-      if (this.cancelAnimationFrame) {
-        this.cancelAnimationFrame.call(window, this.animationFrameId)
-        this.animationFrameId = null
+      //window.clearTimeout(this.timeout)
+      if (this.timeout) {
+        this.timeout.stop();
+        this.timeout = null;
       }
+      this.interval = null
+      //if (this.cancelAnimationFrame) {
+      //  this.cancelAnimationFrame.call(window, this.animationFrameId)
+      //  this.animationFrameId = null
+      //}
       this._velm.removeClass(this.options.playingClass)
     },
 
@@ -793,7 +804,8 @@ define([
         if (this.interval) {
           this.play()
         }
-        this.setTimeout(this.options.onslideend, [this.index, slide])
+        ///this.setTimeout(this.options.onslideend, [this.index, slide])
+        langx.defer(this.options.onslideend, [this.index, slide]);
       }
     },
 
@@ -819,7 +831,8 @@ define([
       if (this.interval && this.slides[this.index] === parent) {
         this.play()
       }
-      this.setTimeout(this.options.onslidecomplete, [index, parent])
+      ///this.setTimeout(this.options.onslidecomplete, [index, parent])
+      langx.defer(this.options.onslidecomplete, [index, parent]);
     },
 
     onload: function (event) {
@@ -968,7 +981,8 @@ define([
     onslide: function (index) {
       this.index = index
       this.handleSlide(index)
-      this.setTimeout(this.options.onslide, [index, this.slides[index]])
+      ///this.setTimeout(this.options.onslide, [index, this.slides[index]])
+      langx.defer(this.options.onslide, [index, this.slides[index]]);
     },
 
     setTitle: function (index) {
