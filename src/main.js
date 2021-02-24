@@ -4,6 +4,7 @@ define([
     "./Cascadable",
     "./Group",
     "./Slidable",
+    "./Tiler",
     "./Tree"
 ], function(lists) {
     return lists;
