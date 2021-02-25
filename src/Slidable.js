@@ -214,9 +214,8 @@ define([
       var thumbnailUrl
       var thumbnail
       if (this.options.thumbnailIndicators) {
-        if (thumbnailProperty) {
-          thumbnailUrl = obj["thumbnail"]
-        }
+        thumbnailUrl = obj["thumbnail"]
+
         if (thumbnailUrl === undefined) {
           thumbnail = obj.getElementsByTagName && $(obj).find('img')[0]
           if (thumbnail) {
