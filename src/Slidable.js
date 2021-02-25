@@ -1,11 +1,14 @@
 define([
   'skylark-langx/langx',
+  'skylark-domx-browser',
   'skylark-domx-noder',
+  'skylark-domx-styler',
   'skylark-domx-eventer',
   'skylark-domx-query',
   'skylark-domx-plugins',
+  "skylark-devices-points/touch",
   "./lists"
-], function (langx, noder, eventer, $,plugins,lists) {
+], function (langx,browser, noder, styler, eventer, $,plugins,touch,lists) {
   'use strict'
   var Slidable = plugins.Plugin.inherit({
     klassName: "Slidable",
@@ -174,95 +177,6 @@ define([
       startSlideshow: true
     },
     */
-    // Detect touch, transition, transform and background-size support:
-    support: (function (element) {
-      var support = {
-        touch: window.ontouchstart !== undefined ||
-          (window.DocumentTouch && document instanceof DocumentTouch)
-      }
-      var transitions = {
-        webkitTransition: {
-          end: 'webkitTransitionEnd',
-          prefix: '-webkit-'
-        },
-        MozTransition: {
-          end: 'transitionend',
-          prefix: '-moz-'
-        },
-        OTransition: {
-          end: 'otransitionend',
-          prefix: '-o-'
-        },
-        transition: {
-          end: 'transitionend',
-          prefix: ''
-        }
-      }
-      var prop
-      for (prop in transitions) {
-        if (
-          transitions.hasOwnProperty(prop) &&
-          element.style[prop] !== undefined
-        ) {
-          support.transition = transitions[prop]
-          support.transition.name = prop
-          break
-        }
-      }
-
-      function elementTests() {
-        var transition = support.transition
-        var prop
-        var translateZ
-        document.body.appendChild(element)
-        if (transition) {
-          prop = transition.name.slice(0, -9) + 'ransform'
-          if (element.style[prop] !== undefined) {
-            element.style[prop] = 'translateZ(0)'
-            translateZ = window
-              .getComputedStyle(element)
-              .getPropertyValue(transition.prefix + 'transform')
-            support.transform = {
-              prefix: transition.prefix,
-              name: prop,
-              translate: true,
-              translateZ: !!translateZ && translateZ !== 'none'
-            }
-          }
-        }
-        if (element.style.backgroundSize !== undefined) {
-          support.backgroundSize = {}
-          element.style.backgroundSize = 'contain'
-          support.backgroundSize.contain =
-            window
-            .getComputedStyle(element)
-            .getPropertyValue('background-size') === 'contain'
-          element.style.backgroundSize = 'cover'
-          support.backgroundSize.cover =
-            window
-            .getComputedStyle(element)
-            .getPropertyValue('background-size') === 'cover'
-        }
-        document.body.removeChild(element)
-      }
-      if (document.body) {
-        elementTests()
-      } else {
-        $(document).on('DOMContentLoaded', elementTests)
-      }
-      return support
-      // Test element, has to be standard HTML and must not be hidden
-      // for the CSS3 tests using window.getComputedStyle to be applicable:
-    })(document.createElement('div')),
-
-    requestAnimationFrame: window.requestAnimationFrame ||
-      window.webkitRequestAnimationFrame ||
-      window.mozRequestAnimationFrame,
-
-    cancelAnimationFrame: window.cancelAnimationFrame ||
-      window.webkitCancelRequestAnimationFrame ||
-      window.webkitCancelAnimationFrame ||
-      window.mozCancelAnimationFrame,
 
     _construct: function (gallery, options) {
       this.overrided(gallery, options);
@@ -345,46 +259,42 @@ define([
       if (!speed) {
         speed = this.options.transitionSpeed
       }
-      if (this.support.transform) {
-        if (!this.options.continuous) {
-          to = this.circle(to)
-        }
-        // 1: backward, -1: forward:
-        direction = Math.abs(index - to) / (index - to)
-        // Get the actual position of the slide:
-        if (this.options.continuous) {
-          naturalDirection = direction
-          direction = -this.positions[this.circle(to)] / this.slideWidth
-          // If going forward but to < index, use to = slides.length + to
-          // If going backward but to > index, use to = -slides.length + to
-          if (direction !== naturalDirection) {
-            to = -direction * this.num + to
-          }
-        }
-        diff = Math.abs(index - to) - 1
-        // Move all the slides between index and to in the right direction:
-        while (diff) {
-          diff -= 1
-          this.move(
-            this.circle((to > index ? to : index) - diff - 1),
-            this.slideWidth * direction,
-            0
-          )
-        }
+      if (!this.options.continuous) {
         to = this.circle(to)
-        this.move(index, this.slideWidth * direction, speed)
-        this.move(to, 0, speed)
-        if (this.options.continuous) {
-          this.move(
-            this.circle(to - direction),
-            -(this.slideWidth * direction),
-            0
-          )
-        }
-      } else {
-        to = this.circle(to)
-        this.animate(index * -this.slideWidth, to * -this.slideWidth, speed)
       }
+      // 1: backward, -1: forward:
+      direction = Math.abs(index - to) / (index - to)
+      // Get the actual position of the slide:
+      if (this.options.continuous) {
+        naturalDirection = direction
+        direction = -this.positions[this.circle(to)] / this.slideWidth
+        // If going forward but to < index, use to = slides.length + to
+        // If going backward but to > index, use to = -slides.length + to
+        if (direction !== naturalDirection) {
+          to = -direction * this.num + to
+        }
+      }
+      diff = Math.abs(index - to) - 1
+      // Move all the slides between index and to in the right direction:
+      while (diff) {
+        diff -= 1
+        this.move(
+          this.circle((to > index ? to : index) - diff - 1),
+          this.slideWidth * direction,
+          0
+        )
+      }
+      to = this.circle(to)
+      this.move(index, this.slideWidth * direction, speed)
+      this.move(to, 0, speed)
+      if (this.options.continuous) {
+        this.move(
+          this.circle(to - direction),
+          -(this.slideWidth * direction),
+          0
+        )
+      }
+
       this.onslide(to)
     },
 
@@ -514,15 +424,15 @@ define([
 
       function closeHandler(event) {
         if (event.target === that._elm) {
-          that._velm.off(that.support.transition.end, closeHandler)
+          that._velm.off(browser.support.transition.end, closeHandler)
           that.handleClose()
         }
       }
       if (this.options.onclose) {
         this.options.onclose.call(this)
       }
-      if (this.support.transition && this.options.displayTransition) {
-        this._velm.on(this.support.transition.end, closeHandler)
+      if (this.options.displayTransition) {
+        this._velm.on(browser.support.transition.end, closeHandler)
         this._velm.removeClass(this.options.displayClass)
       } else {
         this.handleClose()
@@ -540,17 +450,10 @@ define([
     },
 
     translate: function (index, x, y, speed) {
-      var style = this.slides[index].style
-      var transition = this.support.transition
-      var transform = this.support.transform
-      style[transition.name + 'Duration'] = speed + 'ms'
-      style[transform.name] =
-        'translate(' +
-        x +
-        'px, ' +
-        y +
-        'px)' +
-        (transform.translateZ ? ' translateZ(0)' : '')
+      var slide = this.slides[index];
+      styler.css(slide,"transitionDuration",speed + "ms");
+      styler.css(slide,"transform", 'translate(' + x + 'px, ' +  y +  'px)' +  ' translateZ(0)');
+
     },
 
     translateX: function (index, x, speed) {
@@ -1075,17 +978,17 @@ define([
 
     positionSlide: function (index) {
       var slide = this.slides[index]
-      slide.style.width = this.slideWidth + 'px'
-      if (this.support.transform) {
-        slide.style.left = index * -this.slideWidth + 'px'
-        this.move(
-          index,
-          this.index > index ?
-          -this.slideWidth :
-          this.index < index ? this.slideWidth : 0,
-          0
-        )
-      }
+      styler.css(slide,{
+         "width" : this.slideWidth + 'px' ,
+         "left" : index * -this.slideWidth + 'px'
+      });
+      this.move(
+        index,
+        this.index > index ?
+        -this.slideWidth :
+        this.index < index ? this.slideWidth : 0,
+        0
+      )
     },
 
     initSlides: function (reload) {
@@ -1125,13 +1028,9 @@ define([
         this.positionSlide(i)
       }
       // Reposition the slides before and after the given index:
-      if (this.options.continuous && this.support.transform) {
+      if (this.options.continuous) {
         this.move(this.circle(this.index - 1), -this.slideWidth, 0)
         this.move(this.circle(this.index + 1), this.slideWidth, 0)
-      }
-      if (!this.support.transform) {
-        this.slidesContainer[0].style.left =
-          this.index * -this.slideWidth + 'px'
       }
     },
 
@@ -1186,7 +1085,7 @@ define([
 
       function proxyListener(event) {
         var type =
-          that.support.transition && that.support.transition.end === event.type ?
+          browser.support.transition.end === event.type ?
           'transitionend' :
           event.type
         that['on' + type](event)
@@ -1194,20 +1093,19 @@ define([
       $(window).on('resize', proxyListener)
       $(document.body).on('keydown', proxyListener)
       this._velm.on('click', proxyListener)
-      if (this.support.touch) {
+      if (touch.isTouchEnabled()) {
         slidesContainer.on(
           'touchstart touchmove touchend touchcancel',
           proxyListener
         )
-      } else if (this.options.emulateTouchEvents && this.support.transition) {
+      } else if (this.options.emulateTouchEvents) {
         slidesContainer.on(
           'mousedown mousemove mouseup mouseout',
           proxyListener
         )
       }
-      if (this.support.transition) {
-        slidesContainer.on(this.support.transition.end, proxyListener)
-      }
+
+      slidesContainer.on(browser.support.transition.end, proxyListener)
       this.proxyListener = proxyListener
     },
 
@@ -1217,20 +1115,18 @@ define([
       $(window).off('resize', proxyListener)
       $(document.body).off('keydown', proxyListener)
       this._velm.off('click', proxyListener)
-      if (this.support.touch) {
+      if (touch.isTouchEnabled()) {
         slidesContainer.off(
           'touchstart touchmove touchend touchcancel',
           proxyListener
         )
-      } else if (this.options.emulateTouchEvents && this.support.transition) {
+      } else if (this.options.emulateTouchEvents ) {
         slidesContainer.off(
           'mousedown mousemove mouseup mouseout',
           proxyListener
         )
       }
-      if (this.support.transition) {
-        slidesContainer.off(this.support.transition.end, proxyListener)
-      }
+      slidesContainer.off(browser.support.transition.end, proxyListener)
     },
 
     handleOpen: function () {
@@ -1244,7 +1140,7 @@ define([
 
       function openHandler(event) {
         if (event.target === that._elm) {
-          that._velm.off(that.support.transition.end, openHandler)
+          that._velm.off(browser.support.transition.end, openHandler)
           that.handleOpen()
         }
       }
@@ -1270,8 +1166,8 @@ define([
       if (this.options.onopen) {
         this.options.onopen.call(this)
       }
-      if (this.support.transition && this.options.displayTransition) {
-        this._velm.on(this.support.transition.end, openHandler)
+      if (this.options.displayTransition) {
+        this._velm.on(browser.support.transition.end, openHandler)
       } else {
         this.handleOpen()
       }
@@ -1294,10 +1190,6 @@ define([
         // remember the original option by setting to null instead of false:
         this.options.continuous = this.options.continuous ? null : false
       }
-      if (!this.support.transition) {
-        this.options.emulateTouchEvents = false
-      }
-
     }
   });
 

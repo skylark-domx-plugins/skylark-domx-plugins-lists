@@ -217,6 +217,11 @@ requirejs.config({
             main: 'main'
          },
          {
+           name : "skylark-devices-points",
+           location : "../node_modules/skylark-devices-points/dist/uncompressed/skylark-devices-points",
+            main: 'main'
+         },
+         {
             name: 'skylark-bootstrap3',
             location : "../node_modules/skylark-bootstrap3/dist/uncompressed/skylark-bootstrap3",
             main: 'main'
