@@ -16,44 +16,53 @@ define([
     pluginName : "domx.plugins.lists.slidable",
 
     options: {
-      // The Id, element or querySelector of the gallery view:
-      ///container: null,
-      // The tag name, Id, element or querySelector of the slides container:
-      slidesContainer: 'div',
-      // The tag name, Id, element or querySelector of the title element:
-      titleElement: 'h3',
-      // The class to add when the gallery is visible:
-      displayClass: 'lark-domx-slidable-display',
-      // The class to add when the gallery only displays one element:
-      singleClass: 'lark-domx-slidable-single',
-      // The class to add when the left edge has been reached:
-      leftEdgeClass: 'lark-domx-slidable-left',
-      // The class to add when the right edge has been reached:
-      rightEdgeClass: 'lark-domx-slidable-right',
-      // The class to add when the automatic slideshow is active:
-      playingClass: 'lark-domx-slidable-playing',
+      selectors : {
+        // The tag name, Id, element or querySelector of the slides container:
+        slidesContainer: 'div',
+        // The tag name, Id, element or querySelector of the title element:
+        titleElement: 'h3',
 
-			// The class to add when the gallery controls are visible:
-		  controlsClass: 'lark-domx-slidable-controls',
+        // The tag name, Id, element or querySelector of the indicator container:
+        indicatorContainer: 'ol'
+      },
 
-      // The class for all slides:
-      slideClass: 'slide',
-      // The slide class for loading elements:
-      slideLoadingClass: 'slide-loading',
-      // The slide class for elements that failed to load:
-      slideErrorClass: 'slide-error',
-      // The class for the content element loaded into each slide:
-      slideContentClass: 'slide-content',
-      // The class for the "toggle" control:
-      toggleClass: 'toggle',
-      // The class for the "prev" control:
-      prevClass: 'prev',
-      // The class for the "next" control:
-      nextClass: 'next',
-      // The class for the "close" control:
-      closeClass: 'close',
-      // The class for the "play-pause" toggle control:
-      playPauseClass: 'play-pause',
+      classes : {
+        // The class to add when the gallery is visible:
+        displayClass: 'lark-domx-slidable-display',
+        // The class to add when the gallery only displays one element:
+        singleClass: 'lark-domx-slidable-single',
+        // The class to add when the left edge has been reached:
+        leftEdgeClass: 'lark-domx-slidable-left',
+        // The class to add when the right edge has been reached:
+        rightEdgeClass: 'lark-domx-slidable-right',
+        // The class to add when the automatic slideshow is active:
+        playingClass: 'lark-domx-slidable-playing',
+
+        // The class to add when the gallery controls are visible:
+        controlsClass: 'lark-domx-slidable-controls',
+
+        // The class for all slides:
+        slideClass: 'slide',
+        // The slide class for loading elements:
+        slideLoadingClass: 'slide-loading',
+        // The slide class for elements that failed to load:
+        slideErrorClass: 'slide-error',
+        // The class for the content element loaded into each slide:
+        slideContentClass: 'slide-content',
+        // The class for the "toggle" control:
+        toggleClass: 'toggle',
+        // The class for the "prev" control:
+        prevClass: 'prev',
+        // The class for the "next" control:
+        nextClass: 'next',
+        // The class for the "close" control:
+        closeClass: 'close',
+        // The class for the "play-pause" toggle control:
+        playPauseClass: 'play-pause',
+
+        // The class for the active indicator:
+        activeIndicatorClass: 'active'
+      },
       // The list object property (or data attribute) with the object type:
       //--- typeProperty: 'type',
       // The list object property (or data attribute) with the object title:
@@ -78,37 +87,53 @@ define([
       //--- stretchImages: false,
       // Toggle the controls on pressing the Return key:
       toggleControlsOnReturn: true,
+
       // Toggle the controls on slide click:
       toggleControlsOnSlideClick: true,
+
       // Toggle the automatic slideshow interval on pressing the Space key:
       toggleSlideshowOnSpace: true,
+
       // Navigate the gallery by pressing left and right on the keyboard:
       enableKeyboardNavigation: true,
+
       // Close the gallery on pressing the Esc key:
       closeOnEscape: false,
+
       // Close the gallery when clicking on an empty slide area:
       closeOnSlideClick: false,
+
       // Close the gallery by swiping up or down:
       closeOnSwipeUpOrDown: false,
+
       // Emulate touch events on mouse-pointer devices such as desktop browsers:
       emulateTouchEvents: true,
+
       // Stop touch events from bubbling up to ancestor elements of the Gallery:
       stopTouchEventsPropagation: false,
+
       // Hide the page scrollbars:
       hidePageScrollbars: false,
+
       // Stops any touches on the container from scrolling the page:
       disableScroll: true,
+
       // Carousel mode (shortcut for carousel specific options):
       carousel: false,
+
       // Allow continuous navigation, moving from last to first
       // and from first to last slide:
       continuous: true,
+
       // Remove elements outside of the preload range from the DOM:
       unloadElements: true,
+
       // Start with the automatic slideshow:
       startSlideshow: false,
+
       // Delay in milliseconds between slides for the automatic slideshow:
       slideshowInterval: 5000,
+
       // The starting index as integer.
       // Can also be an object of the given list,
       // or an equal object with the same url property:
@@ -125,13 +150,8 @@ define([
         // Hide the page scrollbars:
       hidePageScrollbars: false,
 
-      // The tag name, Id, element or querySelector of the indicator container:
-      indicatorContainer: 'ol',
-      // The class for the active indicator:
-      activeIndicatorClass: 'active',
-      // The list object property (or data attribute) with the thumbnail URL,
-      // used as alternative to a thumbnail child element:
-      thumbnailProperty: 'thumbnail',
+
+
       // Defines if the gallery indicators should display a thumbnail:
       thumbnailIndicators: true,
 
@@ -164,20 +184,6 @@ define([
       onclosed: undefined
     },
 
-    /*---
-    carouselOptions: {
-      hidePageScrollbars: false,
-      toggleControlsOnReturn: false,
-      toggleSlideshowOnSpace: false,
-      enableKeyboardNavigation: false,
-      closeOnEscape: false,
-      closeOnSlideClick: false,
-      closeOnSwipeUpOrDown: false,
-      disableScroll: false,
-      startSlideshow: true
-    },
-    */
-
     _construct: function (gallery, options) {
       this.overrided(gallery, options);
       this._velm = this.elmx();
@@ -205,12 +211,11 @@ define([
       var gallery = this.gallery,
         indicator = this.indicatorPrototype.cloneNode(false)
       var title = obj.title;
-      var thumbnailProperty = this.options.thumbnailProperty
       var thumbnailUrl
       var thumbnail
       if (this.options.thumbnailIndicators) {
         if (thumbnailProperty) {
-          thumbnailUrl = obj[thumbnailProperty]
+          thumbnailUrl = obj["thumbnail"]
         }
         if (thumbnailUrl === undefined) {
           thumbnail = obj.getElementsByTagName && $(obj).find('img')[0]
@@ -240,10 +245,10 @@ define([
     setActiveIndicator: function (index) {
       if (this.indicators) {
         if (this.activeIndicator) {
-          this.activeIndicator.removeClass(this.options.activeIndicatorClass)
+          this.activeIndicator.removeClass(this.options.classes.activeIndicatorClass)
         }
         this.activeIndicator = $(this.indicators[index])
-        this.activeIndicator.addClass(this.options.activeIndicatorClass)
+        this.activeIndicator.addClass(this.options.classes.activeIndicatorClass)
       }
     },
 
@@ -327,24 +332,9 @@ define([
       }
       this.interval = time || this.options.slideshowInterval
       if (this.elements[this.index] > 1) {
-        /*
-        this.timeout = this.setTimeout(
-          (!this.requestAnimationFrame && this.slide) ||
-          function (to, speed) {
-            that.animationFrameId = that.requestAnimationFrame.call(
-              window,
-              function () {
-                that.slide(to, speed)
-              }
-            )
-          },
-          [this.index + 1, this.options.slideshowTransitionSpeed],
-          this.interval
-        )*/
-
         this.timeout = langx.debounce(this.slide.bind(this),this.interval,true)(this.index + 1, this.options.slideshowTransitionSpeed);
       }
-      this._velm.addClass(this.options.playingClass)
+      this._velm.addClass(this.options.classes.playingClass)
     },
 
     pause: function () {
@@ -358,7 +348,7 @@ define([
       //  this.cancelAnimationFrame.call(window, this.animationFrameId)
       //  this.animationFrameId = null
       //}
-      this._velm.removeClass(this.options.playingClass)
+      this._velm.removeClass(this.options.classes.playingClass)
     },
 
     add: function (list) {
@@ -375,11 +365,11 @@ define([
       this.num = this.list.length
       if (this.num > 2 && this.options.continuous === null) {
         this.options.continuous = true
-        this._velm.removeClass(this.options.leftEdgeClass)
+        this._velm.removeClass(this.options.classes.leftEdgeClass)
       }
       this._velm
-        .removeClass(this.options.rightEdgeClass)
-        .removeClass(this.options.singleClass)
+        .removeClass(this.options.classes.rightEdgeClass)
+        .removeClass(this.options.classes.singleClass)
       for (i = this.num - list.length; i < this.num; i += 1) {
         this.addSlide(i)
         this.positionSlide(i)
@@ -399,7 +389,7 @@ define([
 
     handleClose: function () {
       if (this.activeIndicator) {
-        this.activeIndicator.removeClass(this.options.activeIndicatorClass)
+        this.activeIndicator.removeClass(this.options.classes.activeIndicatorClass)
       }
 
       var options = this.options
@@ -433,7 +423,7 @@ define([
       }
       if (this.options.displayTransition) {
         this._velm.on(browser.support.transition.end, closeHandler)
-        this._velm.removeClass(this.options.displayClass)
+        this._velm.removeClass(this.options.classes.displayClass)
       } else {
         this.handleClose()
       }
@@ -462,26 +452,6 @@ define([
 
     translateY: function (index, y, speed) {
       this.translate(index, 0, y, speed)
-    },
-
-    animate: function (from, to, speed) {
-      if (!speed) {
-        this.slidesContainer[0].style.left = to + 'px'
-        return
-      }
-      var that = this
-      var start = new Date().getTime()
-      var timer = window.setInterval(function () {
-        var timeElap = new Date().getTime() - start
-        if (timeElap > speed) {
-          that.slidesContainer[0].style.left = to + 'px'
-          that.ontransitionend()
-          window.clearInterval(timer)
-          return
-        }
-        that.slidesContainer[0].style.left =
-          (to - from) * (Math.floor(timeElap / speed * 100) / 100) + from + 'px'
-      }, 4)
     },
 
     onresize: function () {
@@ -720,9 +690,9 @@ define([
         return
       }
       index = this.getNodeIndex(parent)
-      $(parent).removeClass(this.options.slideLoadingClass)
+      $(parent).removeClass(this.options.classes.slideLoadingClass)
       if (event.type === 'error') {
-        $(parent).addClass(this.options.slideErrorClass)
+        $(parent).addClass(this.options.classes.slideErrorClass)
         this.elements[index] = 3 // Fail
       } else {
         this.elements[index] = 2 // Done
@@ -803,23 +773,23 @@ define([
       function isTarget(className) {
         return $(target).hasClass(className) || $(parent).hasClass(className)
       }
-      if (isTarget(options.toggleClass)) {
+      if (isTarget(options.classes.toggleClass)) {
         // Click on "toggle" control
         eventer.stop(event)
         this.toggleControls()
-      } else if (isTarget(options.prevClass)) {
+      } else if (isTarget(options.classes.prevClass)) {
         // Click on "prev" control
         eventer.stop(event)
         this.prev()
-      } else if (isTarget(options.nextClass)) {
+      } else if (isTarget(options.classes.nextClass)) {
         // Click on "next" control
         eventer.stop(event)
         this.next()
-      } else if (isTarget(options.closeClass)) {
+      } else if (isTarget(options.classes.closeClass)) {
         // Click on "close" control
         eventer.stop(event)
         this.close()
-      } else if (isTarget(options.playPauseClass)) {
+      } else if (isTarget(options.classes.playPauseClass)) {
         // Click on "play-pause" control
         eventer.stop(event)
         this.toggleSlideshow()
@@ -858,14 +828,14 @@ define([
 
     updateEdgeClasses: function (index) {
       if (!index) {
-        this._velm.addClass(this.options.leftEdgeClass)
+        this._velm.addClass(this.options.classes.leftEdgeClass)
       } else {
-        this._velm.removeClass(this.options.leftEdgeClass)
+        this._velm.removeClass(this.options.classes.leftEdgeClass)
       }
       if (index === this.num - 1) {
-        this._velm.addClass(this.options.rightEdgeClass)
+        this._velm.addClass(this.options.classes.rightEdgeClass)
       } else {
-        this._velm.removeClass(this.options.rightEdgeClass)
+        this._velm.removeClass(this.options.classes.rightEdgeClass)
       }
     },
 
@@ -900,19 +870,9 @@ define([
       }
     },
 
-    setTimeout: function (func, args, wait) {
-      var that = this
-      return (
-        func &&
-        window.setTimeout(function () {
-          func.apply(that, args || [])
-        }, wait || 0)
-      )
-    },
-
     createElement: function (obj, callback) {
       var element = this.options.renderItem(obj, callback);
-      $(element).addClass(this.options.slideContentClass);
+      $(element).addClass(this.options.classes.slideContentClass);
       return element;
     },
 
@@ -920,13 +880,13 @@ define([
       if (!this.elements[index]) {
         if (this.slides[index].firstChild) {
           this.elements[index] = $(this.slides[index]).hasClass(
-              this.options.slideErrorClass
+              this.options.classes.slideErrorClass
             ) ?
             3 :
             2
         } else {
           this.elements[index] = 1 // Loading
-          $(this.slides[index]).addClass(this.options.slideLoadingClass)
+          $(this.slides[index]).addClass(this.options.classes.slideLoadingClass)
           this.slides[index].appendChild(
             this.createElement(this.list[index], this.proxyListener)
           )
@@ -994,7 +954,7 @@ define([
     initSlides: function (reload) {
       if (!reload) {
         this.indicatorContainer = this._velm.query(
-          this.options.indicatorContainer
+          this.options.selectors.indicatorContainer
         )
         if (this.indicatorContainer.length) {
           this.indicatorPrototype = document.createElement('li')
@@ -1010,7 +970,7 @@ define([
         this.imagePrototype = document.createElement('img')
         this.elementPrototype = document.createElement('div')
         this.slidePrototype = document.createElement('div')
-        $(this.slidePrototype).addClass(this.options.slideClass)
+        $(this.slidePrototype).addClass(this.options.classes.slideClass)
         this.slides = this.slidesContainer[0].children
         clearSlides =
           this.options.clearSlides || this.slides.length !== this.num
@@ -1052,7 +1012,7 @@ define([
 
     toggleControls: function () {
 
-      var controlsClass = this.options.controlsClass
+      var controlsClass = this.options.classes.controlsClass
       if (this._velm.hasClass(controlsClass)) {
         this._velm.removeClass(controlsClass)
       } else {
@@ -1144,24 +1104,16 @@ define([
           that.handleOpen()
         }
       }
-      //this.container = $(this.options.container)
-      //if (!this.container.length) {
-      //  this.console.log(
-      //    'blueimp Gallery: Widget container not found.',
-      //    this.options.container
-      //  )
-      //  return false
-     // }
       this.slidesContainer = this._velm
-        .query(this.options.slidesContainer)
+        .query(this.options.selectors.slidesContainer)
         .first()
       if (!this.slidesContainer.length) {
 
         return false
       }
-      this.titleElement = this._velm.query(this.options.titleElement).first()
+      this.titleElement = this._velm.query(this.options.selectors.titleElement).first()
       if (this.num === 1) {
-        this._velm.addClass(this.options.singleClass)
+        this._velm.addClass(this.options.classes.singleClass)
       }
       if (this.options.onopen) {
         this.options.onopen.call(this)
@@ -1178,40 +1130,12 @@ define([
       }
       this._velm.show();
       this.initSlides()
-      this._velm.addClass(this.options.displayClass)
-    },
-
-    initOptions: function (options) {
-      // Create a copy of the prototype options:
-      this.overrided(langx.mixin({}, SliderView.prototype.options, options));
-
-      if (this.num < 3) {
-        // 1 or 2 slides cannot be displayed continuous,
-        // remember the original option by setting to null instead of false:
-        this.options.continuous = this.options.continuous ? null : false
-      }
+      this._velm.addClass(this.options.classes.displayClass)
     }
   });
 
 
   plugins.register(Slidable);
-
-  /*
-  Gallery.installAddon("views", {
-    "name": "slider",
-    "ctor": SliderView,
-    "templates": {
-      "default": '<div class="slides"></div>' +
-        '<h3 class="title"></h3>' +
-        '<a class="prev">‹</a>' +
-        '<a class="next">›</a>' +
-        '<a class="close">×</a>' +
-        '<a class="play-pause"></a>' +
-        '<ol class="indicator"></ol>'
-
-    }
-  });
-  */
 
   return lists.Slidable = Slidable;
 });
